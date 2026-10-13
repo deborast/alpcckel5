@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - KhodamBelajar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#5E43FF' } } } }</script>
+</head>
+<body class="bg-slate-50 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <h2 class="text-xl font-bold mb-6 text-center">Masuk ke Akunmu</h2>
+        <div class="space-y-4">
+            <input type="email" id="logEmail" placeholder="Email" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary outline-none">
+            <input type="password" id="logPassword" placeholder="Password" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary outline-none">
+            <button id="btnLogin" class="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition mt-4">Masuk</button>
+        </div>
+        <p class="text-center text-sm text-gray-500 mt-6">Belum punya akun? <a href="register.html" class="text-primary font-semibold">Daftar di sini</a></p>
+    </div>
+
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { auth } from './js/firebase-config.js';
+
+        document.getElementById('btnLogin').addEventListener('click', async () => {
+            const email = document.getElementById('logEmail').value;
+            const password = document.getElementById('logPassword').value;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                if (!user.emailVerified) {
+                    await signOut(auth); 
+                    alert("Kamu belum melakukan verifikasi email! Silakan cek inbox/spam email kamu.");
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                alert("Login gagal! Pastikan email dan password benar.");
+            }
+        });
+    </script>
+</body>
+</html>

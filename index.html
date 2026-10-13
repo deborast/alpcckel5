@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beranda - KhodamBelajar</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#5E43FF', primaryLight: '#ECE9FF' } } } }</script>
+</head>
+<body class="bg-slate-50 font-sans flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-white border-r flex flex-col justify-between h-full z-20 shrink-0">
+        <div>
+            <div class="p-6 flex items-center gap-3">
+                <div class="bg-primary text-white p-2 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+                <h1 class="font-bold text-xl text-gray-800">Khodam<span class="text-primary">Belajar</span></h1>
+            </div>
+            <nav class="px-4 space-y-1">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-3 bg-primaryLight text-primary font-semibold rounded-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg> Beranda</a>
+                <a href="target.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 rounded-xl hover:bg-gray-50 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg> Target Belajar</a>
+                <a href="modul.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 rounded-xl hover:bg-gray-50 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> Modul Belajar</a>
+                <a href="kuis.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 rounded-xl hover:bg-gray-50 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Kuis & Nilai</a>
+                <a href="profil.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 rounded-xl hover:bg-gray-50 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> Profil</a>
+            </nav>
+        </div>
+        <div class="p-4 border-t flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold user-photo-display overflow-hidden">?</div>
+                <div><p class="text-sm font-bold text-gray-800 user-name-display">Memuat...</p></div>
+            </div>
+            <button onclick="logoutUser()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg" title="Logout"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-y-auto p-8 max-w-7xl mx-auto w-full">
+        
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Halo, <span class="user-name-display">Memuat...</span>!</h2>
+                <p class="text-gray-500">Siap melanjutkan perjalanan belajarmu hari ini?</p>
+            </div>
+            <div class="flex gap-4 items-center">
+                <button onclick="window.location.href='target.html'" class="bg-primary text-white px-6 py-2 rounded-xl font-semibold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition">+ Buat Target Baru</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-3xl border flex items-center gap-5 shadow-sm">
+                <div class="w-14 h-14 bg-primaryLight text-primary rounded-2xl flex items-center justify-center"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+                <div><p class="text-sm font-semibold text-gray-500">Total Target</p><p class="text-3xl font-extrabold text-gray-900"><span id="statTotalTarget">0</span></p></div>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border flex items-center gap-5 shadow-sm">
+                <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center font-bold text-2xl">📚</div>
+                <div><p class="text-sm font-semibold text-gray-500">Modul Selesai</p><p class="text-3xl font-extrabold text-gray-900" id="statMateriSelesai">0 <span class="text-sm font-normal text-gray-400">dari 0</span></p></div>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border flex items-center gap-5 shadow-sm">
+                <div class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl">📈</div>
+                <div><p class="text-sm font-semibold text-gray-500">Total Progress</p><p class="text-3xl font-extrabold text-gray-900" id="statPersenSkor">0<span class="text-sm font-normal text-gray-400">%</span></p></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Target Belajar Aktif</h3>
+                    <a href="target.html" class="text-sm font-semibold text-primary hover:underline">Lihat semua &gt;</a>
+                </div>
+                <div id="berandaTargetContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="col-span-2 text-center py-10 border-2 border-dashed rounded-xl text-gray-400">Memuat data...</div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Aktivitas Nilai</h3>
+                    <a href="kuis.html" class="text-sm font-semibold text-primary hover:underline">Detail</a>
+                </div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border h-56 flex flex-col justify-center items-center text-center cursor-pointer hover:bg-gray-50 transition" onclick="window.location.href='kuis.html'">
+                    <p class="text-gray-400 text-sm">Lihat evaluasi dan kerjakan kuis<br>di sini!</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { db } from './js/firebase-config.js';
+
+        const targetRef = ref(db, 'target_belajar');
+        const container = document.getElementById('berandaTargetContainer');
+
+        onValue(targetRef, (snapshot) => {
+            if (snapshot.exists()) {
+                document.getElementById('statTotalTarget').innerText = snapshot.size;
+                container.innerHTML = '';
+                
+                let count = 0; let globalTotalModul = 0; let globalSelesaiModul = 0;
+
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    let totalModulTarget = 0; let selesaiModulTarget = 0;
+                    const modulList = data.modul_list || {};
+                    if (data.materi && !modulList['legacy']) modulList['legacy'] = { judul_modul: "Modul Pertama", materi: data.materi };
+                    
+                    Object.values(modulList).forEach(m => {
+                        totalModulTarget++; globalTotalModul++;
+                        let tBab = 0, sBab = 0;
+                        if (m.materi && Array.isArray(m.materi)) {
+                            tBab = m.materi.length;
+                            m.materi.forEach(bab => { if(bab.selesai) sBab++; });
+                        }
+                        if (tBab > 0 && sBab === tBab) { selesaiModulTarget++; globalSelesaiModul++; }
+                    });
+
+                    let persen = totalModulTarget === 0 ? 0 : Math.round((selesaiModulTarget / totalModulTarget) * 100);
+
+                    if (count < 2) { 
+                        const card = document.createElement('div');
+                        card.className = "bg-white p-6 rounded-3xl shadow-sm border flex flex-col justify-between h-56 hover:shadow-md transition cursor-pointer";
+                        card.onclick = () => window.location.href = 'target.html';
+                        card.innerHTML = `
+                            <div>
+                                <div class="flex justify-between items-start mb-3"><div class="w-10 h-10 rounded-xl bg-primaryLight text-primary flex items-center justify-center font-bold text-xl">🎯</div><span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">Aktif</span></div>
+                                <h4 class="font-bold text-lg text-gray-800 line-clamp-1 group-hover:text-primary transition">${data.judul}</h4>
+                                <p class="text-sm text-gray-500 line-clamp-1">${data.deskripsi || 'Tidak ada deskripsi'}</p>
+                            </div>
+                            <div class="mt-auto">
+                                <div class="text-xs text-gray-500 font-medium mb-2">Target selesai: ${data.tanggal}</div>
+                                <div class="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden border"><div class="bg-primary h-2 rounded-full transition-all duration-1000 ease-out" style="width: ${persen}%"></div></div>
+                                <div class="flex justify-between text-xs text-gray-500 font-medium"><span>${selesaiModulTarget} dari ${totalModulTarget} modul</span><span class="font-bold text-primary">${persen}%</span></div>
+                            </div>
+                        `;
+                        container.prepend(card); count++;
+                    }
+                });
+                document.getElementById('statMateriSelesai').innerHTML = `${globalSelesaiModul} <span class="text-sm font-normal text-gray-400">dari ${globalTotalModul}</span>`;
+                document.getElementById('statPersenSkor').innerHTML = `${globalTotalModul === 0 ? 0 : Math.round((globalSelesaiModul / globalTotalModul) * 100)}<span class="text-sm font-normal text-gray-400">%</span>`;
+            } else {
+                document.getElementById('statTotalTarget').innerText = "0";
+                container.innerHTML = `<div class="col-span-2 text-center py-10 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 cursor-pointer hover:bg-gray-100 transition" onclick="window.location.href='target.html'"><div class="text-gray-400 mb-2 font-medium">Belum ada target belajar.</div><button class="text-primary font-bold hover:underline">+ Buat Target Baru</button></div>`;
+            }
+        });
+    </script>
+</body>
+</html>

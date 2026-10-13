@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar - KhodamBelajar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#5E43FF' } } } }</script>
+</head>
+<body class="bg-slate-50 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+        <h2 class="text-xl font-bold mb-6 text-center">Buat Akun Baru</h2>
+        <div class="space-y-4">
+            <input type="text" id="regNama" placeholder="Nama Lengkap" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary outline-none">
+            <input type="email" id="regEmail" placeholder="Email (Gunakan email asli)" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary outline-none">
+            <input type="password" id="regPassword" placeholder="Password (Minimal 6 karakter)" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary outline-none">
+            
+            <button id="btnRegister" class="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition mt-4">Daftar Akun</button>
+        </div>
+        <p class="text-center text-sm text-gray-500 mt-6">Sudah punya akun? <a href="login.html" class="text-primary font-semibold">Login di sini</a></p>
+    </div>
+
+    <script type="module">
+        import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { auth } from './js/firebase-config.js';
+
+        document.getElementById('btnRegister').addEventListener('click', async () => {
+            const nama = document.getElementById('regNama').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            if(!nama || !email || !password) return alert("Isi semua data!");
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await updateProfile(userCredential.user, { displayName: nama });
+                await sendEmailVerification(userCredential.user);
+                alert("Pendaftaran berhasil! Cek INBOX EMAIL kamu untuk klik link verifikasi sebelum login.");
+                window.location.href = 'login.html';
+            } catch (error) {
+                alert("Gagal mendaftar: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
