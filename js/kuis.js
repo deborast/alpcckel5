@@ -1,6 +1,6 @@
 import { ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { db } from './firebase-config.js';
-import { GEMINI_API_KEY } from './env.js';
+import { GEMINI_API_KEY } from './js/env.js';
 
 const targetRef = ref(db, 'target_belajar');
 const nilaiRef = ref(db, 'riwayat_nilai');
@@ -8,8 +8,8 @@ const nilaiRef = ref(db, 'riwayat_nilai');
 let kuisSoalData = [];
 let kuisModulAktif = { idTarget: null, idModul: null, judul: "" };
 let loadingInterval;
-
 let isGeneratingKuis = false;
+let allRiwayatData = {}; 
 
 window.showToast = (title, message, type = "success") => {
     const toast = document.getElementById('customToast');
@@ -33,7 +33,6 @@ onValue(targetRef, (snapshot) => {
 
             Object.entries(modulList).forEach(([modulId, modulData]) => {
                 hasModul = true;
-                
                 let tBab = 0, sBab = 0;
                 if(modulData.materi) {
                     tBab = modulData.materi.length;
@@ -70,7 +69,6 @@ window.mulaiKuisAi = async (tId, mId, judulModul) => {
     }
 
     isGeneratingKuis = true;
-
     kuisModulAktif = { idTarget: tId, idModul: mId, judul: judulModul };
     
     document.getElementById('viewDaftarKuis').classList.add('hidden');
@@ -82,42 +80,26 @@ window.mulaiKuisAi = async (tId, mId, judulModul) => {
     loadingInterval = setInterval(() => { idx = (idx + 1) % teksVariasi.length; document.getElementById('loadingKuisText').innerText = teksVariasi[idx]; }, 2000);
 
     try {
-        const prompt = `Buatkan 10 soal kuis pilihan ganda tentang topik "${judulModul}". 
-        Balasanmu WAJIB berupa JSON Array murni yang diawali dengan '[' dan diakhiri dengan ']', seperti contoh berikut:
-        [
-          {
-            "soal": "Pertanyaan 1?",
-            "pilihan": ["A. opsi 1", "B. opsi 2", "C. opsi 3", "D. opsi 4"],
-            "jawaban_benar": "A. opsi 1"
-          }
-        ]`;
+        const prompt = `Buatkan 10 soal pilihan ganda tentang topik "${judulModul}". Kembalikan HANYA dalam format JSON Array tanpa teks pengantar. Gunakan key: "soal" (string), "pilihan" (array 4 opsi A/B/C/D), dan "jawaban_benar" (string sesuai opsi).`;
         
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ contents: [{ parts: [{text: prompt}] }] }) 
+            body: JSON.stringify({ 
+                contents: [{ parts: [{text: prompt}] }],
+                generationConfig: { responseMimeType: "application/json" }
+            }) 
         });
         
         if (!response.ok) throw new Error("Gagal mengambil data dari Google AI");
         
         const hasilApi = await response.json(); 
-        let teksJSON = hasilApi.candidates[0].content.parts[0].text;
-        
-        const awal = teksJSON.indexOf('[');
-        const akhir = teksJSON.lastIndexOf(']');
-        
-        if (awal !== -1 && akhir !== -1) {
-            teksJSON = teksJSON.substring(awal, akhir + 1);
-        } else {
-            throw new Error("Format JSON gagal diekstrak.");
-        }
-        
-        kuisSoalData = JSON.parse(teksJSON);
+        kuisSoalData = JSON.parse(hasilApi.candidates[0].content.parts[0].text);
         renderSoalKeLayar();
         
     } catch (error) {
         console.error("Detail Error Kuis:", error);
-        showToast("Gagal", "AI gagal menyusun soal. Coba tekan tombol Generate lagi.", "error");
+        showToast("Gagal", "Server AI sedang sibuk. Coba tekan tombol Generate lagi.", "error");
         batalKuis();
     } finally { 
         clearInterval(loadingInterval); 
@@ -162,13 +144,36 @@ function renderSoalKeLayar() {
     });
 }
 
-window.submitKuis = async () => {
-    if (!confirm("Yakin sudah menjawab semua soal dan ingin mengumpulkan?")) return;
+// logic popup kuis
+window.submitKuis = () => {
+    document.getElementById('modalKonfirmasiSubmit').classList.remove('hidden');
+    document.getElementById('modalKonfirmasiSubmit').classList.add('flex');
+};
+
+window.batalSubmit = () => {
+    document.getElementById('modalKonfirmasiSubmit').classList.add('hidden');
+    document.getElementById('modalKonfirmasiSubmit').classList.remove('flex');
+};
+
+window.prosesSubmitKuis = async () => {
+    document.getElementById('modalKonfirmasiSubmit').classList.add('hidden');
+    document.getElementById('modalKonfirmasiSubmit').classList.remove('flex');
 
     let benar = 0;
+    let detailJawabanUser = []; 
+
     kuisSoalData.forEach((item, i) => {
         const jawabanUser = document.querySelector(`input[name="soal_${i}"]:checked`);
-        if (jawabanUser && jawabanUser.value.trim() === item.jawaban_benar.trim()) benar++;
+        const valueUser = jawabanUser ? jawabanUser.value.trim() : "";
+        
+        if (valueUser === item.jawaban_benar.trim()) benar++;
+
+        detailJawabanUser.push({
+            soal: item.soal,
+            pilihan: item.pilihan,
+            jawaban_benar: item.jawaban_benar,
+            jawaban_user: valueUser
+        });
     });
 
     const skorAkhir = Math.round((benar / kuisSoalData.length) * 100);
@@ -178,7 +183,8 @@ window.submitKuis = async () => {
             judul_modul: kuisModulAktif.judul,
             skor: skorAkhir,
             tanggal: new Date().toLocaleDateString('id-ID'),
-            catatan: ""
+            catatan: "",
+            detail_soal: detailJawabanUser 
         });
         
         showToast("Kuis Selesai!", `Kamu menjawab benar ${benar} dari ${kuisSoalData.length} soal. Nilai ${skorAkhir} berhasil disimpan.`);
@@ -186,13 +192,20 @@ window.submitKuis = async () => {
     } catch (error) { showToast("Gagal", "Skor gagal disimpan ke database.", "error"); }
 };
 
+
+// riwayat&review
 onValue(nilaiRef, (snapshot) => {
     const container = document.getElementById('containerRiwayat');
     container.innerHTML = '';
+    allRiwayatData = {}; 
     
     if (snapshot.exists()) {
         const dataArray = [];
-        snapshot.forEach((child) => { dataArray.push({ id: child.key, ...child.val() }); });
+        snapshot.forEach((child) => { 
+            const d = { id: child.key, ...child.val() };
+            dataArray.push(d); 
+            allRiwayatData[child.key] = d; 
+        });
         dataArray.reverse();
 
         dataArray.forEach(data => {
@@ -213,6 +226,7 @@ onValue(nilaiRef, (snapshot) => {
                     </div>
 
                     <div class="absolute top-4 right-20 flex gap-1 opacity-0 group-hover:opacity-100 transition z-10">
+                        <button onclick="bukaReview('${data.id}')" class="p-2 bg-white border shadow-sm rounded-full text-gray-500 hover:text-green-500 transition" title="Review Kuis"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>
                         <button onclick="bukaModalCatatan('${data.id}', '${data.catatan}')" class="p-2 bg-white border shadow-sm rounded-full text-gray-500 hover:text-blue-500 transition" title="Tambah/Edit Catatan"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                         <button onclick="hapusNilai('${data.id}')" class="p-2 bg-white border shadow-sm rounded-full text-gray-500 hover:text-red-500 transition" title="Hapus Riwayat"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                     </div>
@@ -223,6 +237,96 @@ onValue(nilaiRef, (snapshot) => {
         container.innerHTML = `<div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center text-gray-400 font-medium border-dashed">Belum ada nilai. Selesaikan modul dan kerjakan kuis!</div>`;
     }
 });
+
+
+// review&feedback
+window.bukaReview = async (id) => {
+    const data = allRiwayatData[id];
+    
+    if(!data || !data.detail_soal) {
+        showToast("Maaf", "Riwayat kuis lama ini belum memiliki data detail jawaban.", "error");
+        return;
+    }
+
+    document.getElementById('reviewJudulModul').innerText = data.judul_modul;
+    const reviewSkor = document.getElementById('reviewSkor');
+    reviewSkor.innerText = data.skor;
+    reviewSkor.className = `text-3xl font-black px-4 py-2 rounded-xl ${data.skor >= 80 ? 'text-green-600 bg-green-100' : (data.skor >= 60 ? 'text-yellow-600 bg-yellow-100' : 'text-red-600 bg-red-100')}`;
+
+    const containerSoal = document.getElementById('containerReviewSoal');
+    containerSoal.innerHTML = '';
+    
+    let daftarSalah = []; 
+
+    data.detail_soal.forEach((item, i) => {
+        const isBenar = item.jawaban_user === item.jawaban_benar;
+        if(!isBenar) daftarSalah.push(`Soal: ${item.soal} (User menjawab: ${item.jawaban_user || 'Kosong'}, Seharusnya: ${item.jawaban_benar})`);
+
+        let opsiHTML = '';
+        item.pilihan.forEach(opsi => {
+            let bgColor = 'bg-white';
+            let border = 'border-gray-200';
+            let icon = '';
+
+            if (opsi === item.jawaban_benar) {
+                bgColor = 'bg-green-50'; border = 'border-green-400'; icon = '✅';
+            } 
+            else if (opsi === item.jawaban_user && !isBenar) {
+                bgColor = 'bg-red-50'; border = 'border-red-400'; icon = '❌';
+            }
+
+            opsiHTML += `
+                <div class="p-3 border ${border} ${bgColor} rounded-xl text-sm font-medium text-gray-700 flex justify-between">
+                    <span>${opsi}</span>
+                    <span>${icon}</span>
+                </div>
+            `;
+        });
+
+        containerSoal.innerHTML += `
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <h5 class="font-bold text-gray-800 mb-3"><span class="${isBenar ? 'text-green-500' : 'text-red-500'} mr-1">${i+1}.</span> ${item.soal}</h5>
+                <div class="space-y-2">${opsiHTML}</div>
+                ${!item.jawaban_user ? '<p class="text-xs text-red-500 mt-2 font-bold">*Kamu tidak memilih jawaban untuk soal ini.</p>' : ''}
+            </div>
+        `;
+    });
+
+    document.getElementById('modalReviewKuis').classList.remove('hidden');
+    document.getElementById('modalReviewKuis').classList.add('flex');
+
+    const feedbackBox = document.getElementById('reviewFeedbackAI');
+    const teksFeedback = document.getElementById('teksFeedbackAI');
+    
+    if (daftarSalah.length > 0) {
+        feedbackBox.classList.remove('hidden');
+        teksFeedback.innerHTML = `<span class="animate-pulse">Khodam sedang merumuskan masukan evaluasi belajarmu...</span>`;
+        
+        try {
+            const prompt = `Sebagai mentor bernama Khodam, berikan masukan singkat (maksimal 2 paragraf pendek) untuk murid yang baru saja mengerjakan kuis materi "${data.judul_modul}". Murid ini salah menjawab beberapa pertanyaan berikut:\n\n${daftarSalah.join('\n')}\n\nBeritahu dia topik atau teori spesifik apa yang harus dia pelajari lagi berdasarkan kesalahannya tersebut. Gunakan bahasa Indonesia kasual yang memotivasi.`;
+            
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ contents: [{ parts: [{text: prompt}] }] }) 
+            });
+            
+            if (!response.ok) throw new Error();
+            const hasilApi = await response.json();
+            teksFeedback.innerHTML = hasilApi.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+        } catch(e) {
+            teksFeedback.innerText = "Gagal mengambil masukan AI saat ini. Tapi jangan menyerah, pelajari lagi materi yang masih salah di bawah ya!";
+        }
+    } else {
+        feedbackBox.classList.remove('hidden');
+        teksFeedback.innerText = "Wow, sempurna! Tidak ada masukan perbaikan dari Khodam karena kamu berhasil menjawab semua soal dengan benar. Pertahankan!";
+    }
+};
+
+window.tutupReview = () => {
+    document.getElementById('modalReviewKuis').classList.add('hidden');
+    document.getElementById('modalReviewKuis').classList.remove('flex');
+};
 
 window.bukaModalCatatan = (id, oldCatatan) => {
     document.getElementById('editNilaiId').value = id;

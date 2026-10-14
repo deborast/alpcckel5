@@ -1,6 +1,7 @@
 import { ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { db } from './firebase-config.js';
-import { GEMINI_API_KEY } from './env.js';
+import { GEMINI_API_KEY } from './js/env.js';
+
 const targetRef = ref(db, 'target_belajar');
 
 let allTargetsData = {};
@@ -83,21 +84,38 @@ function renderFolder(id) {
         const persenBab = tBab === 0 ? 0 : Math.round((sBab/tBab)*100);
 
         const card = document.createElement('div');
-        card.className = `p-6 rounded-2xl shadow-sm border-2 ${isModulSelesai ? 'border-green-300 bg-green-50/20' : 'bg-white border-gray-100'} flex flex-col justify-between h-48 hover:border-primary transition cursor-pointer`;
+        card.className = `p-6 rounded-2xl shadow-sm border-2 ${isModulSelesai ? 'border-green-300 bg-green-50/20' : 'bg-white border-gray-100'} flex flex-col h-48 hover:border-primary transition cursor-pointer group`;
         
         card.onclick = () => window.location.href = `baca.html?target=${id}&modul=${modulId}`;
         
         card.innerHTML = `
-            <div>
-                <h4 class="font-bold text-lg text-gray-800 line-clamp-2">${modulData.judul_modul}</h4>
-                <div class="mt-3 flex justify-between text-xs text-gray-500 font-bold mb-1"><span>${sBab}/${tBab} Bab Selesai</span><span class="text-primary">${persenBab}%</span></div>
-                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="${isModulSelesai ? 'bg-green-500' : 'bg-primary'} h-1.5 rounded-full" style="width: ${persenBab}%"></div></div>
+            <div class="flex justify-between items-start mb-2 gap-2">
+                <h4 class="font-bold text-lg text-gray-800 line-clamp-2 leading-snug">${modulData.judul_modul}</h4>
+                <button onclick="event.stopPropagation(); hapusModul('${id}', '${modulId}')" class="text-gray-300 hover:text-red-500 transition shrink-0 opacity-0 group-hover:opacity-100" title="Hapus Modul">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
             </div>
-            <div class="mt-auto flex justify-between items-center text-primary font-bold text-sm">Masuk Modul &rarr;</div>
+            <div class="mt-auto">
+                <div class="flex justify-between text-xs text-gray-500 font-bold mb-1"><span>${sBab}/${tBab} Bab Selesai</span><span class="text-primary">${persenBab}%</span></div>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden mb-4"><div class="${isModulSelesai ? 'bg-green-500' : 'bg-primary'} h-1.5 rounded-full" style="width: ${persenBab}%"></div></div>
+                <div class="flex justify-between items-center text-primary font-bold text-sm border-t pt-3">Masuk Modul &rarr;</div>
+            </div>
         `;
         containerModul.prepend(card);
     });
 }
+
+// crud modul
+window.hapusModul = async (idTarget, idModul) => {
+    if(confirm("Yakin ingin menghapus modul ini beserta isinya?")) {
+        try {
+            await remove(ref(db, `target_belajar/${idTarget}/modul_list/${idModul}`));
+            showToast("Terhapus", "Modul berhasil dihapus dari Target Belajar.");
+        } catch(err) {
+            showToast("Gagal", "Gagal menghapus modul.", "error");
+        }
+    }
+};
 
 // logic khodam
 window.cekFilePdf = () => { if(document.getElementById('aiPdf').files.length > 0) document.getElementById('btnHapusPdf').classList.remove('hidden'); };
@@ -119,12 +137,28 @@ window.generateAI = async () => {
         let partsData = [{ text: `Kamu adalah sistem KhodamBelajar. Buatkan tepat ${bab} bab materi belajar untuk judul modul "${topikModul}". ${kisi ? `Fokus kisi: \${kisi}` : ''} WAJIB balas HANYA dengan JSON MURNI: [{"bab": 1, "judul": "Judul Bab", "ringkasan": "Isi 3 paragraf"}]` }];
         if (filePdf) { const base64Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(filePdf); }); partsData.push({ inline_data: { mime_type: "application/pdf", data: base64Data } }); }
         
-        const response = await fetch(`[https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$){GEMINI_API_KEY.trim()}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: partsData }], generationConfig: { responseMimeType: "application/json" } }) });
-        const hasilApi = await response.json(); const parsedData = JSON.parse(hasilApi.candidates[0].content.parts[0].text);
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY.trim()}`, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ 
+                contents: [{ parts: partsData }], 
+                generationConfig: { responseMimeType: "application/json" } 
+            }) 
+        });
+        
+        if (!response.ok) throw new Error("Gagal terhubung ke Google AI.");
+        
+        const hasilApi = await response.json(); 
+        const parsedData = JSON.parse(hasilApi.candidates[0].content.parts[0].text);
 
         await push(ref(db, `target_belajar/${activeTargetId}/modul_list`), { judul_modul: topikModul, materi: parsedData, tanggal_dibuat: new Date().toLocaleDateString('id-ID') });
         showToast("Berhasil!", "Modul sukses disatukan ke Folder Target."); tutupModalKhodam();
-    } catch (error) { showToast("Gagal", "Koneksi AI error.", "error"); formArea.classList.remove('hidden'); loadArea.classList.add('hidden'); loadArea.classList.remove('flex'); } finally { clearInterval(loadingInterval); }
+    } catch (error) { 
+        showToast("Gagal", "Koneksi AI error.", "error"); 
+        formArea.classList.remove('hidden'); 
+        loadArea.classList.add('hidden'); 
+        loadArea.classList.remove('flex'); 
+    } finally { clearInterval(loadingInterval); }
 };
 
 window.bukaModal = () => { document.getElementById('inputId').value = ""; document.getElementById('inputJudul').value = ""; document.getElementById('modalForm').classList.remove('hidden'); document.getElementById('modalForm').classList.add('flex'); };

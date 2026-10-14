@@ -3,91 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil - KhodamBelajar</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Profil Saya - KhodamBelajar</title>
     <link rel="stylesheet" href="css/style.css">
-    <script>tailwind.config = { theme: { extend: { colors: { primary: '#5E43FF' } } } }</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#5E43FF', primaryLight: '#ECE9FF' } } } }</script>
 </head>
 <body class="bg-slate-50 font-sans flex h-screen overflow-hidden">
-    
-    <main class="flex-1 overflow-y-auto p-8 max-w-2xl mx-auto">
-        <h2 class="text-3xl font-bold text-gray-800 mb-6">Pengaturan Profil</h2>
-        <a href="index.html" class="text-primary hover:underline mb-8 block">&larr; Kembali ke Beranda</a>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-6">
-            <div class="flex items-center gap-4 border-b pb-6">
-                <div class="w-16 h-16 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold text-2xl user-photo-display overflow-hidden">
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold user-name-display">Memuat...</h3>
-                    <p class="text-gray-500 text-sm">Akun Terverifikasi</p>
-                </div>
+    <div id="customToast" class="fixed top-8 right-8 z-[100] transform translate-x-[150%] transition-transform duration-500 bg-white border-l-4 shadow-2xl rounded-2xl p-5 flex items-start gap-4 w-80">
+        <div id="toastIcon" class="p-2 rounded-full"></div>
+        <div><h4 id="toastTitle" class="font-bold text-gray-800 text-lg">Berhasil!</h4><p id="toastMessage" class="text-sm text-gray-500 mt-1 leading-snug">Pesan di sini</p></div>
+    </div>
+
+    <div id="tempat-sidebar" class="z-20 shrink-0 h-full w-64 border-r bg-white"></div>
+
+    <main class="flex-1 flex flex-col h-full overflow-y-auto">
+        <header class="bg-white px-8 py-4 flex justify-end items-center border-b border-gray-100 sticky top-0 z-10">
+            <div class="flex gap-4 items-center">
+                <div class="w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold text-sm user-photo-display cursor-pointer overflow-hidden"></div>
+            </div>
+        </header>
+
+        <div class="p-8 max-w-6xl mx-auto w-full">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Profil Saya</h2>
+                <p class="text-gray-500">Kelola informasi pribadi dan pengaturan akunmu.</p>
             </div>
 
-            <div>
-                <label class="block text-sm text-gray-600 mb-1">Ubah Nama Tampilan</label>
-                <input type="text" id="editNama" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary mb-4">
-                
-                <label class="block text-sm text-gray-600 mb-1">Ubah Foto Profil (Masukkan Link URL Gambar)</label>
-                <input type="url" id="editFotoUrl" placeholder="https://contoh.com/foto.jpg" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary mb-4">
-                
-                <button id="btnSimpanProfil" class="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition">Update Profil</button>
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="col-span-1">
+                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
+                        <div class="relative mb-4">
+                            <div class="w-24 h-24 bg-gray-100 text-gray-400 rounded-2xl flex items-center justify-center font-bold text-3xl user-photo-display overflow-hidden"></div>
+                            
+                            <button onclick="document.getElementById('inputFotoProfil').click()" class="absolute -bottom-2 -right-2 bg-primary text-white p-2 rounded-xl shadow-lg border-2 border-white hover:bg-indigo-600 transition" title="Ganti Foto">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
+                            
+                            <input type="file" id="inputFotoProfil" accept="image/*" class="hidden" onchange="previewFoto(event)">
+                        </div>
+                        
+                        <h3 id="displayNamaCard" class="text-xl font-bold text-gray-900 user-name-display">Memuat...</h3>
+                        <p id="displayEmailCard" class="text-sm text-gray-500 mb-3 user-email-display">Memuat email...</p>
+                        <div class="bg-green-50 text-green-600 px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 mb-6 border border-green-100">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Email Terverifikasi
+                        </div>
+                        
+                        <div class="w-full space-y-3 text-sm text-left border-t border-gray-100 pt-6 mb-6">
+                            <div class="flex justify-between text-gray-500"><span class="font-medium">Bergabung sejak</span><span id="displayTanggalGabung" class="font-bold text-gray-800">-</span></div>
+                            <div class="flex justify-between text-gray-500"><span class="font-medium">Target dibuat</span><span id="displayJumlahTarget" class="font-bold text-gray-800">0 target</span></div>
+                        </div>
 
-            <hr>
+                        <button onclick="logoutUser()" class="w-full py-3 bg-red-50 text-red-500 font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-red-100 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg> Keluar dari Akun
+                        </button>
+                    </div>
+                </div>
 
-            <div>
-                <h3 class="font-bold text-lg mb-4 text-red-600">Keamanan</h3>
-                <label class="block text-sm text-gray-600 mb-1">Password Baru</label>
-                <input type="password" id="editPassword" placeholder="Minimal 6 karakter" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:red-500 mb-4">
-                
-                <button id="btnGantiPassword" class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition">Ganti Password</button>
+                <div class="col-span-1 md:col-span-2">
+                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm mb-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">Informasi Pribadi</h3>
+                        <p class="text-sm text-gray-500 mb-6">Perbarui data profil dan alamat emailmu.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Nama lengkap</label>
+                                <input id="inputEditNama" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none text-gray-800" placeholder="Memuat nama...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Alamat email</label>
+                                <input id="inputEditEmail" type="email" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none text-gray-800 bg-gray-50 cursor-not-allowed" disabled placeholder="Memuat email...">
+                                <p class="text-xs text-gray-500 mt-2">Email tidak dapat diubah di sini.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Bio singkat</label>
+                            <textarea id="inputEditBio" rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none text-gray-800" placeholder="Tulis sedikit tentang dirimu atau target belajarmu..."></textarea>
+                        </div>
+                        <div class="flex justify-end mt-6">
+                            <button onclick="simpanProfilTerkini()" class="bg-primary text-white font-bold px-8 py-3 rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">Simpan Perubahan</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">Ubah Kata Sandi</h3>
+                        <p class="text-sm text-gray-500 mb-6">Gunakan minimal 8 karakter yang kuat untuk keamanan akunmu.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Kata sandi saat ini</label>
+                                <input id="inputPassLama" type="password" placeholder="Masukkan kata sandi lama" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none text-gray-800">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Kata sandi baru</label>
+                                <input id="inputPassBaru" type="password" placeholder="Minimal 8 karakter" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none text-gray-800">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button onclick="ubahPasswordTerkini()" class="bg-gray-800 text-white font-bold px-8 py-3 rounded-xl hover:bg-gray-900 transition shadow-md shadow-gray-200">Ubah Kata Sandi</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
+    <script src="js/sidebar.js"></script>
     <script type="module" src="js/auth.js"></script>
+
     <script type="module">
-        import { updateProfile, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { auth } from './js/firebase-config.js';
-        document.getElementById('btnSimpanProfil').addEventListener('click', async () => {
-            const user = auth.currentUser;
-            const namaBaru = document.getElementById('editNama').value;
-            const fotoUrlBaru = document.getElementById('editFotoUrl').value;
+        import { getAuth, onAuthStateChanged, updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { db } from './js/firebase-config.js'; 
 
-            if(user) {
-                try {
-                    await updateProfile(user, {
-                        displayName: namaBaru || user.displayName,
-                        photoURL: fotoUrlBaru || user.photoURL
+        const auth = getAuth();
+        let currentUserLog = null;
+        let fotoBase64Baru = null; 
+
+        window.showToast = (title, message, type = "success") => {
+            const toast = document.getElementById('customToast');
+            document.getElementById('toastTitle').innerText = title; 
+            document.getElementById('toastMessage').innerText = message;
+            toast.className = `fixed top-8 right-8 z-[100] transform transition-transform duration-500 bg-white border-l-4 shadow-2xl rounded-2xl p-5 flex items-start gap-4 w-80 translate-x-0 ${type === 'success' ? 'border-green-500' : 'border-red-500'}`;
+            document.getElementById('toastIcon').innerHTML = type === 'success' 
+                ? `<div class="bg-green-100 text-green-500 p-2 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>` 
+                : `<div class="bg-red-100 text-red-500 p-2 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>`;
+            setTimeout(() => { toast.classList.remove('translate-x-0'); toast.classList.add('translate-x-[150%]'); }, 4000);
+        };
+
+        window.previewFoto = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                if (file.size > 2000000) return showToast("Gagal", "Ukuran foto maksimal 2MB ya!", "error");
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    fotoBase64Baru = e.target.result; 
+                    document.querySelectorAll('.user-photo-display').forEach(el => {
+                        el.innerHTML = `<img src="${fotoBase64Baru}" class="w-full h-full object-cover rounded-full">`;
                     });
-                    alert("Profil berhasil diperbarui!");
-                    window.location.reload();
-                } catch (error) {
-                    alert("Gagal update profil: " + error.message);
-                }
+                };
+                reader.readAsDataURL(file);
             }
-        });
-        document.getElementById('btnGantiPassword').addEventListener('click', async () => {
-            const user = auth.currentUser;
-            const passwordBaru = document.getElementById('editPassword').value;
+        };
 
-            if(passwordBaru.length < 6) return alert("Password harus minimal 6 karakter!");
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserLog = user;
+                
+                document.getElementById('inputEditNama').value = user.displayName || "";
+                document.getElementById('inputEditEmail').value = user.email;
+                document.getElementById('displayEmailCard').innerText = user.email;
 
-            if(user) {
-                try {
-                    await updatePassword(user, passwordBaru);
-                    alert("Password berhasil diubah! Silakan login kembali dengan password baru.");
-                    window.logoutUser(); 
-                } catch (error) {
-                    if(error.code === 'auth/requires-recent-login') {
-                        alert("Untuk alasan keamanan, silakan Logout dan Login kembali sebelum mengganti password.");
-                    } else {
-                        alert("Gagal mengganti password: " + error.message);
+                const tglBuat = new Date(user.metadata.creationTime);
+                const opsiFormat = { day: 'numeric', month: 'long', year: 'numeric' };
+                document.getElementById('displayTanggalGabung').innerText = tglBuat.toLocaleDateString('id-ID', opsiFormat);
+
+                onValue(ref(db, 'target_belajar'), (snapshot) => {
+                    document.getElementById('displayJumlahTarget').innerText = snapshot.exists() ? `${snapshot.size} target` : "0 target";
+                });
+
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    if (snapshot.exists() && snapshot.val().bio) {
+                        const teksBio = snapshot.val().bio;
+                        document.getElementById('inputEditBio').value = teksBio;
+                        document.querySelectorAll('.user-bio-display').forEach(el => el.innerText = teksBio);
                     }
-                }
+                }, { onlyOnce: true });
             }
         });
+
+        window.simpanProfilTerkini = async () => {
+            const namaBaru = document.getElementById('inputEditNama').value.trim();
+            const bioBaru = document.getElementById('inputEditBio').value.trim();
+
+            if(!namaBaru) return showToast("Gagal", "Nama lengkap tidak boleh kosong!", "error");
+
+            try {
+                const dataUpdateAuth = { displayName: namaBaru };
+                if (fotoBase64Baru) dataUpdateAuth.photoURL = fotoBase64Baru;
+                await updateProfile(currentUserLog, dataUpdateAuth);
+                await update(ref(db, 'users/' + currentUserLog.uid), { 
+                    bio: bioBaru, 
+                    nama: namaBaru,
+                    foto: fotoBase64Baru || currentUserLog.photoURL || ""
+                });
+                
+                showToast("Berhasil", "Profil, Bio, dan Foto berhasil diperbarui!");
+                
+                document.querySelectorAll('.user-name-display').forEach(el => el.innerText = namaBaru);
+                document.querySelectorAll('.user-bio-display').forEach(el => el.innerText = bioBaru || "Pelajar");
+                
+            } catch (error) {
+                showToast("Error", "Gagal menyimpan: " + error.message, "error");
+            }
+        };
+
+        window.ubahPasswordTerkini = async () => {
+            const passLama = document.getElementById('inputPassLama').value;
+            const passBaru = document.getElementById('inputPassBaru').value;
+
+            if(!passLama || !passBaru) return showToast("Peringatan", "Harap isi kata sandi lama dan baru.", "error");
+            if(passBaru.length < 8) return showToast("Peringatan", "Kata sandi baru minimal 8 karakter.", "error");
+
+            try {
+                const credential = EmailAuthProvider.credential(currentUserLog.email, passLama);
+                await reauthenticateWithCredential(currentUserLog, credential);
+                
+                await updatePassword(currentUserLog, passBaru);
+                
+                showToast("Berhasil", "Kata sandimu berhasil diperbarui!");
+                document.getElementById('inputPassLama').value = '';
+                document.getElementById('inputPassBaru').value = '';
+            } catch (error) {
+                showToast("Gagal", "Kata sandi saat ini salah, atau akun bermasalah.", "error");
+            }
+        };
     </script>
 </body>
 </html>

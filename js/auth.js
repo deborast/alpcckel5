@@ -1,5 +1,7 @@
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { auth } from './firebase-config.js';
+import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { auth, db } from './firebase-config.js';
+
 
 onAuthStateChanged(auth, (user) => {
     const isAuthPage = window.location.href.includes('login.html') || window.location.href.includes('register.html');
@@ -20,6 +22,15 @@ onAuthStateChanged(auth, (user) => {
                     el.innerText = nama.charAt(0).toUpperCase();
                 }
             });
+
+            onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                if (snapshot.exists() && snapshot.val().bio) {
+                    const teksBio = snapshot.val().bio;
+                    document.querySelectorAll('.user-bio-display').forEach(el => el.innerText = teksBio);
+                } else {
+                    document.querySelectorAll('.user-bio-display').forEach(el => el.innerText = "hi !");
+                }
+            }, { onlyOnce: true });
         }
     } else {
         if (!isAuthPage) window.location.href = 'login.html';
