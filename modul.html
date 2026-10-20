@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul Belajar - KhodamBelajar</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#5E43FF', primaryLight: '#ECE9FF' } } } }</script>
+    <style>
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.3); opacity: 0; } }
+        .ring-anim::before { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-color: #5E43FF; border-radius: 50%; z-index: -1; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        html { scroll-behavior: smooth; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #5E43FF; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans flex h-screen overflow-hidden">
+
+    <div id="customToast" class="fixed top-8 right-8 z-[100] transform translate-x-[150%] transition-transform duration-500 bg-white border-l-4 shadow-2xl rounded-2xl p-5 flex items-start gap-4 w-80">
+        <div id="toastIcon" class="p-2 rounded-full"></div>
+        <div><h4 id="toastTitle" class="font-bold text-gray-800 text-lg">Berhasil!</h4><p id="toastMessage" class="text-sm text-gray-500 mt-1">Pesan</p></div>
+    </div>
+
+    <div id="tempat-sidebar" class="z-20 shrink-0 h-full"></div>
+
+    <main class="flex-1 flex flex-col h-full overflow-y-auto relative">
+        <header class="bg-white px-8 py-4 flex justify-end items-center border-b border-transparent sticky top-0 z-10">
+            <div class="w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold user-photo-display overflow-hidden cursor-pointer" onclick="window.location.href='profil.html'">?</div>
+        </header>
+
+        <div class="p-8 pb-20 max-w-7xl mx-auto w-full">
+            <div id="viewList">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Perpustakaan Modul 📚</h2>
+                        <p class="text-gray-500">Koleksi semua modul materi yang telah disusun oleh AI dari target belajarmu.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative w-full sm:w-64">
+                            <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <input type="text" id="searchModulGlobal" oninput="renderPerpustakaanModul()" placeholder="Cari judul modul..." class="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:border-primary outline-none w-full shadow-sm transition">
+                        </div>
+                        <select id="filterTargetGlobal" onchange="renderPerpustakaanModul()" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 font-medium focus:border-primary outline-none shadow-sm cursor-pointer">
+                            <option value="all">Semua Target Belajar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="containerRingkasan" class="space-y-8 max-h-[72vh] overflow-y-auto pr-2 pb-6 custom-scroll">
+                    <div class="animate-pulse bg-white p-6 rounded-3xl border shadow-sm h-64"></div>
+                </div>
+            </div>
+
+            <div id="viewBaca" class="hidden">
+                <button onclick="kembaliKeList()" class="text-gray-500 hover:text-primary mb-8 flex items-center gap-2 font-semibold bg-white px-4 py-2 rounded-full shadow-sm border w-max transition hover:shadow">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Tutup Modul
+                </button>
+                <div class="bg-gradient-to-r from-primary to-indigo-600 p-10 rounded-3xl shadow-lg mb-10 text-white">
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-4 inline-block">Modul Belajar</span>
+                    <h2 id="bacaJudul" class="text-4xl md:text-5xl font-extrabold leading-tight">Judul Modul</h2>
+                </div>
+                <div id="bacaKonten" class="w-full"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalKhodam" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white w-full max-w-lg p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+            <div id="formKhodamArea">
+                <div class="text-center mb-6"><div class="text-5xl mb-3">🔮</div><h3 class="text-2xl font-bold text-gray-900">Panggil Khodam AI</h3></div>
+                <div class="space-y-5">
+                    <div><label class="block text-sm font-bold text-gray-700 mb-2">Judul Modul Baru (Topik)</label><input type="text" id="aiTopik" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none transition"></div>
+                    <div class="flex gap-4">
+                        <div class="w-1/3"><label class="block text-sm font-bold text-gray-700 mb-2">Jumlah Bab</label><input type="number" id="aiBab" value="5" min="3" max="10" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none text-center font-bold"></div>
+                        <div class="w-2/3"><label class="block text-sm font-bold text-gray-700 mb-2">Upload PDF Dosen <span class="font-normal text-gray-400">(Opsional)</span></label><input type="file" id="aiPdf" onchange="cekFilePdf()" class="w-full text-xs file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-primaryLight file:text-primary bg-gray-50 rounded-full"><button type="button" id="btnHapusPdf" onclick="hapusPdf()" class="hidden absolute right-1 shrink-0 bg-red-100 text-red-500 p-1.5 rounded-full">X</button></div>
+                    </div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-2">Fokus Kisi-kisi (Opsional)</label><textarea id="aiKisi" rows="2" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none transition"></textarea></div>
+                </div>
+                <div class="mt-8 flex gap-3"><button onclick="tutupModalKhodam()" class="w-1/3 py-4 text-gray-600 font-bold bg-gray-100 hover:bg-gray-200 rounded-xl">Batal</button><button onclick="generateAI()" class="w-2/3 bg-primary text-white font-bold py-4 rounded-xl hover:bg-indigo-700">Generate Materi</button></div>
+            </div>
+            <div id="aiLoadingArea" class="hidden flex-col items-center justify-center py-10">
+                <div class="relative w-24 h-24 mb-8 flex justify-center items-center"><div class="ring-anim absolute w-full h-full"></div><div class="text-6xl absolute z-10 animate-bounce">🔮</div></div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Khodam Bermeditasi</h3><p id="loadingText" class="text-primary font-bold text-lg bg-primaryLight px-4 py-1 rounded-full">Membaca referensi...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEdit" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white w-full max-w-sm p-6 rounded-3xl shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Ubah Judul Modul</h3>
+            <input type="hidden" id="editTargetId"><input type="hidden" id="editModulId">
+            <input type="text" id="editJudulModul" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-primary outline-none font-bold text-gray-700 mb-6">
+            <div class="flex gap-3"><button onclick="tutupEdit()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200">Batal</button><button onclick="simpanEditModul()" class="flex-1 py-3 bg-primary text-white font-bold rounded-xl hover:bg-indigo-700">Simpan</button></div>
+        </div>
+    </div>
+
+    <script src="js/sidebar.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { db } from './js/firebase-config.js';
+
+        import { GEMINI_API_KEY } from './js/env.js';
+        const targetRef = ref(db, 'target_belajar');
+        const container = document.getElementById('containerRingkasan');
+        
+        let allData = {};
+        let activeTargetIdForAi = null;
+        let loadingInterval;
+
+        window.showToast = (title, message, type = "success") => {
+            const toast = document.getElementById('customToast');
+            document.getElementById('toastTitle').innerText = title; document.getElementById('toastMessage').innerText = message;
+            toast.className = `fixed top-8 right-8 z-[100] transform transition-transform duration-500 bg-white border-l-4 shadow-2xl rounded-2xl p-5 flex items-start gap-4 w-80 translate-x-0 ${type === 'success' ? 'border-green-500' : 'border-red-500'}`;
+            document.getElementById('toastIcon').innerHTML = type === 'success' ? `<div class="bg-green-100 text-green-500 p-2 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>` : `<div class="bg-red-100 text-red-500 p-2 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>`;
+            setTimeout(() => { toast.classList.remove('translate-x-0'); toast.classList.add('translate-x-[150%]'); }, 4000);
+        };
+
+        onValue(targetRef, (snapshot) => {
+            allData = {};
+            const selectFilter = document.getElementById('filterTargetGlobal');
+            const currentFilterVal = selectFilter ? selectFilter.value : 'all';
+            if (selectFilter) selectFilter.innerHTML = `<option value="all">Semua Target Belajar</option>`;
+
+            if (snapshot.exists()) {
+                snapshot.forEach((child) => {
+                    const id = child.key;
+                    const data = child.val();
+                    allData[id] = data;
+                    if (selectFilter) {
+                        selectFilter.innerHTML += `<option value="${id}">${data.judul}</option>`;
+                    }
+                });
+                if (selectFilter) selectFilter.value = currentFilterVal;
+            }
+            renderPerpustakaanModul();
+        });
+
+        window.renderPerpustakaanModul = () => {
+            container.innerHTML = '';
+            let isKosong = true;
+            const keyword = (document.getElementById('searchModulGlobal')?.value || '').toLowerCase();
+            const selectedTarget = document.getElementById('filterTargetGlobal')?.value || 'all';
+
+            Object.entries(allData).forEach(([id, data]) => {
+                if (selectedTarget !== 'all' && selectedTarget !== id) return;
+
+                const modulList = data.modul_list || {};
+                if (data.materi && !modulList['legacy']) modulList['legacy'] = { judul_modul: "Modul Pertama", materi: data.materi };
+
+                const filteredModuls = Object.entries(modulList).filter(([modulId, mData]) => {
+                    return (mData.judul_modul || '').toLowerCase().includes(keyword) || (data.judul || '').toLowerCase().includes(keyword);
+                });
+
+                if (keyword !== '' && filteredModuls.length === 0) return;
+
+                const boxTarget = document.createElement('div');
+                boxTarget.className = "bg-white rounded-3xl shadow-sm border p-8";
+                
+                let htmlModul = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-h-[440px] overflow-y-auto pt-4 pr-4 pb-2 pl-1 custom-scroll">`;
+
+                filteredModuls.forEach(([modulId, modulData]) => {
+                    let tBab = 0, sBab = 0;
+                    if(modulData.materi && Array.isArray(modulData.materi)) { tBab = modulData.materi.length; modulData.materi.forEach(b => { if(b.selesai) sBab++; }); }
+                    const isModulSelesai = (tBab > 0 && sBab === tBab);
+                    const persenBab = tBab === 0 ? 0 : Math.round((sBab/tBab)*100);
+                    const safeJudul = (modulData.judul_modul || '').replace(/'/g, "\\'");
+
+                    htmlModul += `
+                        <div class="group relative p-5 border-2 ${isModulSelesai ? 'border-green-300 bg-green-50/30' : 'border-gray-100 bg-white'} rounded-2xl hover:border-primary hover:shadow-lg transition flex flex-col justify-between h-48 cursor-pointer" onclick="bukaBaca('${id}', '${modulId}')">
+                            ${isModulSelesai ? `<div class="absolute -top-3 -right-3 bg-green-500 text-white rounded-full p-2 shadow-lg z-20"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg></div>` : ''}
+                            <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition z-20">
+                                <button onclick="event.stopPropagation(); bukaEdit('${id}', '${modulId}', '${safeJudul}')" class="p-2 bg-white border shadow-sm rounded-full text-gray-500 hover:text-blue-500 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                <button onclick="event.stopPropagation(); hapusModul('${id}', '${modulId}')" class="p-2 bg-white border shadow-sm rounded-full text-gray-500 hover:text-red-500 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-gray-900 text-lg leading-tight line-clamp-2 pr-16">${modulData.judul_modul}</h4>
+                                <div class="mt-3 flex justify-between text-xs text-gray-500 font-bold mb-1"><span>${sBab}/${tBab} Bab Selesai</span><span class="text-primary">${persenBab}%</span></div>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden"><div class="${isModulSelesai ? 'bg-green-500' : 'bg-primary'} h-1.5 rounded-full" style="width: ${persenBab}%"></div></div>
+                            </div>
+                            <div class="text-primary font-bold text-sm flex items-center gap-1 mt-3">Lanjut Baca &rarr;</div>
+                        </div>
+                    `;
+                });
+
+                htmlModul += `<div onclick="bukaModalKhodam('${id}')" class="p-5 border-2 border-dashed border-primaryLight bg-white rounded-2xl flex flex-col items-center justify-center text-primary font-bold cursor-pointer hover:bg-primaryLight transition h-48 group"><div class="text-3xl mb-2 group-hover:scale-125 transition-transform">🔮</div><span class="text-center">Buat Modul Baru</span></div></div>`;
+                boxTarget.innerHTML = `<div class="flex items-center justify-between mb-2"><div class="flex items-center gap-4"><div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">📁</div><h3 class="font-extrabold text-2xl text-gray-900">${data.judul}</h3></div><span class="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">${filteredModuls.length} Modul</span></div>${htmlModul}`;
+                container.appendChild(boxTarget);
+                isKosong = false;
+            });
+
+            if (isKosong) container.innerHTML = `<div class="text-center py-20 text-gray-400 border-2 border-dashed border-gray-300 rounded-3xl bg-white"><div class="text-6xl mb-4">📭</div>Tidak ada modul yang ditemukan.</div>`;
+        };
+
+        window.bukaBaca = (targetId, modulId) => {
+            const targetData = allData[targetId];
+            let modulData = targetData.modul_list ? targetData.modul_list[modulId] : null;
+            if(modulId === 'legacy') modulData = { judul_modul: "Modul Pertama", materi: targetData.materi };
+
+            document.getElementById('bacaJudul').innerText = modulData.judul_modul;
+            const konten = document.getElementById('bacaKonten'); konten.innerHTML = '';
+            
+            let tocHTML = `<div class="hidden lg:block w-1/4 shrink-0"><div class="sticky top-24 bg-white p-6 rounded-3xl border shadow-sm"><h4 class="font-extrabold text-gray-900 mb-4 flex items-center gap-2"><svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg> Daftar Isi</h4><ul class="space-y-3 text-sm font-medium text-gray-500 border-l-2 border-gray-100 ml-2">`;
+            let contentHTML = `<div class="flex-1 space-y-10">`;
+
+            if(modulData.materi) {
+                modulData.materi.forEach((item, index) => {
+                    const chapterId = `bab-${index}`; const isSelesai = item.selesai === true;
+                    tocHTML += `<li class="pl-4 transition relative before:content-[''] before:absolute before:-left-[2px] before:top-0 before:h-full before:w-[2px] ${isSelesai ? 'before:bg-green-400 text-green-600 font-bold' : 'hover:before:bg-primary'}"><a href="#${chapterId}" class="block">Bab ${item.bab}: ${item.judul}</a></li>`;
+                    const isiRapi = item.ringkasan.split('\n').filter(p => p.trim() !== '').map(p => `<p class="mb-5 text-justify">${p}</p>`).join('');
+
+                    const tombolSelesaiBab = isSelesai 
+                        ? `<button onclick="toggleSelesaiBab('${targetId}', '${modulId}', ${index}, false)" class="mt-4 px-6 py-2.5 rounded-xl font-bold text-sm bg-green-50 text-green-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2 border border-green-200 group"><span class="group-hover:hidden">✅ Bab ${item.bab} Selesai</span><span class="hidden group-hover:block">❌ Batal Selesai</span></button>`
+                        : `<button onclick="toggleSelesaiBab('${targetId}', '${modulId}', ${index}, true)" class="mt-4 px-6 py-2.5 rounded-xl font-bold text-sm bg-primaryLight text-primary hover:bg-primary hover:text-white transition border border-primary/20">Tandai Bab ${item.bab} Selesai</button>`;
+
+                    contentHTML += `
+                        <div id="${chapterId}" class="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-2 h-full ${isSelesai ? 'bg-green-400' : 'bg-primary/20 group-hover:bg-primary'} transition-colors"></div>
+                            <span class="text-primary font-black tracking-widest uppercase text-sm mb-3 block">BAB ${item.bab}</span>
+                            <h3 class="text-2xl md:text-3xl font-extrabold text-gray-900 mb-6 leading-tight">${item.judul}</h3>
+                            <div class="text-gray-700 text-lg leading-relaxed font-serif">${isiRapi}</div>
+                            <div class="border-t border-dashed mt-6 pt-2">${tombolSelesaiBab}</div>
+                        </div>
+                    `;
+                });
+            }
+            tocHTML += `</ul></div></div>`; contentHTML += `</div>`;
+            konten.innerHTML = `<div class="flex gap-10 items-start">${tocHTML}${contentHTML}</div>`;
+            document.getElementById('viewList').classList.add('hidden'); document.getElementById('viewBaca').classList.remove('hidden'); window.scrollTo(0,0);
+        };
+
+        window.kembaliKeList = () => { document.getElementById('viewBaca').classList.add('hidden'); document.getElementById('viewList').classList.remove('hidden'); };
+        window.toggleSelesaiBab = async (targetId, modulId, babIndex, statusSelesai) => {
+            try {
+                if (modulId === 'legacy') await update(ref(db, `target_belajar/${targetId}/materi/${babIndex}`), { selesai: statusSelesai });
+                else await update(ref(db, `target_belajar/${targetId}/modul_list/${modulId}/materi/${babIndex}`), { selesai: statusSelesai });
+                showToast(statusSelesai ? "Sip!" : "Batal", statusSelesai ? "Bab Selesai! Progress naik." : "Status dibatalkan.", statusSelesai ? "success" : "error");
+                setTimeout(() => bukaBaca(targetId, modulId), 300); 
+            } catch (error) { showToast("Gagal", "Error menyimpan progress.", "error"); }
+        };
+
+        window.bukaEdit = (targetId, modulId, oldJudul) => { document.getElementById('editTargetId').value = targetId; document.getElementById('editModulId').value = modulId; document.getElementById('editJudulModul').value = oldJudul; document.getElementById('modalEdit').classList.remove('hidden'); document.getElementById('modalEdit').classList.add('flex'); };
+        window.tutupEdit = () => { document.getElementById('modalEdit').classList.add('hidden'); document.getElementById('modalEdit').classList.remove('flex'); };
+        window.simpanEditModul = async () => { const tId = document.getElementById('editTargetId').value, mId = document.getElementById('editModulId').value, jdl = document.getElementById('editJudulModul').value; if(mId === 'legacy') return showToast("Info", "Modul lama tidak bisa diedit.", "error"); await update(ref(db, `target_belajar/${tId}/modul_list/${mId}`), { judul_modul: jdl }); showToast("Sukses", "Judul diubah!"); tutupEdit(); };
+        window.hapusModul = async (tId, mId) => { if(confirm("Hapus modul ini permanen?")) { if (mId === 'legacy') await update(ref(db, `target_belajar/${tId}`), { materi: null }); else await remove(ref(db, `target_belajar/${tId}/modul_list/${mId}`)); showToast("Terhapus", "Modul dibuang."); } };
+
+        window.cekFilePdf = () => { if(document.getElementById('aiPdf').files.length > 0) document.getElementById('btnHapusPdf').classList.remove('hidden'); };
+        window.hapusPdf = () => { document.getElementById('aiPdf').value = ""; document.getElementById('btnHapusPdf').classList.add('hidden'); };
+        
+        window.bukaModalKhodam = (id) => { 
+            activeTargetIdForAi = id; 
+            document.getElementById('aiTopik').value = ""; 
+            if(document.getElementById('aiKisi')) document.getElementById('aiKisi').value = "";
+            hapusPdf(); 
+            document.getElementById('modalKhodam').classList.remove('hidden'); document.getElementById('modalKhodam').classList.add('flex'); 
+            document.getElementById('formKhodamArea').classList.remove('hidden'); document.getElementById('aiLoadingArea').classList.add('hidden'); document.getElementById('aiLoadingArea').classList.remove('flex'); 
+        };
+        window.tutupModalKhodam = () => { document.getElementById('modalKhodam').classList.add('hidden'); document.getElementById('modalKhodam').classList.remove('flex'); hapusPdf(); clearInterval(loadingInterval); };
+
+        window.generateAI = async () => {
+            const formArea = document.getElementById('formKhodamArea'), loadArea = document.getElementById('aiLoadingArea'), teksLoading = document.getElementById('loadingText');
+            const topikModul = document.getElementById('aiTopik').value, bab = document.getElementById('aiBab').value, kisi = document.getElementById('aiKisi').value, filePdf = document.getElementById('aiPdf').files[0];
+
+            if(!topikModul) return showToast("Tunggu Dulu!", "Judul modul wajib diisi.", "error");
+            formArea.classList.add('hidden'); loadArea.classList.remove('hidden'); loadArea.classList.add('flex');
+            const teksVariasi = ["Membaca referensi...", "Menyusun bab mendalam...", "Menulis penjelasan lengkap..."]; let idx = 0; loadingInterval = setInterval(() => { idx = (idx + 1) % teksVariasi.length; teksLoading.innerText = teksVariasi[idx]; }, 2000);
+            
+            try {
+                const namaTarget = (allData[activeTargetIdForAi] && allData[activeTargetIdForAi].judul) ? allData[activeTargetIdForAi].judul : topikModul;
+                const infoKisi = kisi ? ` Fokuskan pembahasan pada kisi-kisi: ${kisi}.` : "";
+                const infoPdf = filePdf ? " Gunakan dokumen PDF terlampir sebagai referensi utama." : "";
+
+                const promptMateri = `Kamu adalah dosen dan instruktur ahli di platform KhodamBelajar. Buatkan tepat ${bab} bab materi pembelajaran yang SANGAT MENDALAM, TERSTRUKTUR, dan PANJANG untuk modul "${topikModul}" (bagian dari target belajar: "${namaTarget}").${infoKisi}${infoPdf} ATURAN WAJIB: 1. Setiap bab WAJIB berisi penjelasan materi yang sangat detail dan komprehensif (minimal 4 sampai 5 paragraf panjang per bab, total minimal 250 kata per bab). 2. DILARANG KERAS menulis ringkasan singkat 1-2 kalimat! Jabarkan teori dasar, cara kerja teknis, langkah implementasi, serta contoh studi kasus nyata secara lengkap. 3. Pisahkan setiap paragraf di dalam string "ringkasan" menggunakan karakter \\n\\n. 4. WAJIB balas HANYA dengan JSON Array murni tanpa markdown dengan format persis seperti ini: [{"bab": 1, "judul": "Judul Bab", "ringkasan": "Paragraf 1 yang panjang dan detail...\\n\\nParagraf 2 yang mendalam...\\n\\nParagraf 3 beserta contoh kasus...\\n\\nParagraf 4 kesimpulan teknis..."}]`;
+
+                let partsData = [{ text: promptMateri }];
+                if (filePdf) { const base64Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(filePdf); }); partsData.push({ inline_data: { mime_type: "application/pdf", data: base64Data } }); }
+                
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY.trim()}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts: partsData }], generationConfig: { responseMimeType: "application/json" } }) 
+                });
+                
+                if (!response.ok) throw new Error("Gagal terhubung ke AI");
+                const hasilApi = await response.json(); 
+                let rawText = hasilApi.candidates[0].content.parts[0].text;
+                rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                const parsedData = JSON.parse(rawText);
+
+                await push(ref(db, `target_belajar/${activeTargetIdForAi}/modul_list`), { judul_modul: topikModul, materi: parsedData, tanggal_dibuat: new Date().toLocaleDateString('id-ID') });
+                tutupModalKhodam(); showToast("Berhasil!", "Modul sukses dibuat.");
+            } catch (error) { 
+                console.error("Error AI Modul:", error);
+                formArea.classList.remove('hidden'); loadArea.classList.add('hidden'); loadArea.classList.remove('flex');
+                showToast("Gagal", "Server AI sedang sibuk, coba lagi.", "error"); 
+            } finally { clearInterval(loadingInterval); }
+        };
+    </script>
+</body>
+</html>

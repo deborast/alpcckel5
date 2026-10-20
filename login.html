@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk - KhodamBelajar AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#5E43FF', primaryLight: '#ECE9FF' } } } }</script>
+    <style>
+        @keyframes float-slow { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .float-anim { animation: float-slow 4s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 md:p-8 font-sans">
+
+    <div id="authToast" class="fixed top-6 right-6 z-50 transform translate-x-[150%] transition-transform duration-500 bg-white border-l-4 shadow-2xl rounded-2xl p-4 flex items-center gap-3 w-80">
+        <div id="authToastIcon" class="p-2 rounded-full shrink-0"></div>
+        <div>
+            <h4 id="authToastTitle" class="font-bold text-gray-800 text-sm">Info</h4>
+            <p id="authToastMsg" class="text-xs text-gray-500 mt-0.5 leading-relaxed">Pesan</p>
+        </div>
+    </div>
+
+    <div class="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[620px]">
+        
+        <!-- panel kiri-->
+        <div class="lg:col-span-7 bg-gradient-to-br from-[#5E43FF] via-indigo-600 to-slate-900 p-8 md:p-12 text-white flex flex-col justify-between relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner border border-white/20">🔮</div>
+                    <span class="font-black text-2xl tracking-tight">KhodamBelajar</span>
+                </div>
+                <span class="bg-white/15 backdrop-blur-md text-indigo-100 text-[11px] font-bold px-3.5 py-1 rounded-full border border-white/15">Powered by Gemini AI ✨</span>
+            </div>
+
+            <div class="relative z-10 my-8">
+                <div class="inline-flex items-center gap-2 bg-indigo-500/30 border border-indigo-300/30 rounded-full px-4 py-1.5 text-xs font-bold text-indigo-100 mb-5">
+                    <span>🚀 Asisten Belajar Pintar Berbasis Cloud</span>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-black leading-tight mb-4">
+                    Ubah Materi Sulit Menjadi Kurikulum Terstruktur.
+                </h1>
+                <p class="text-indigo-100/90 text-sm leading-relaxed max-w-lg">
+                    Susun modul otomatis dari topik atau slide PDF dosen, pantau target belajarmu, dan uji pemahamanmu lewat kuis interaktif bersama Khodam AI.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8">
+                    <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
+                        <div class="text-2xl mb-1.5 float-anim">📚</div>
+                        <h4 class="font-bold text-xs">AI Modul Generator</h4>
+                        <p class="text-[11px] text-indigo-200 mt-1">Rangkum materi & PDF jadi bab rapi.</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
+                        <div class="text-2xl mb-1.5 float-anim">📝</div>
+                        <h4 class="font-bold text-xs">Post-Test & Evaluasi</h4>
+                        <p class="text-[11px] text-indigo-200 mt-1">Soal pilihan ganda otomatis & review AI.</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15">
+                        <div class="text-2xl mb-1.5 float-anim">📈</div>
+                        <h4 class="font-bold text-xs">Analitik Real-Time</h4>
+                        <p class="text-[11px] text-indigo-200 mt-1">Pantau grafik nilai & progres bab.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative z-10 flex items-center justify-between text-xs text-indigo-200/80 pt-4 border-t border-white/10">
+                <span>Platform Pembelajaran Mandiri</span>
+                <span>Cloud &bull; Firebase &bull; Gemini API</span>
+            </div>
+        </div>
+
+        <!-- panel kanan-->
+        <div class="lg:col-span-5 p-8 md:p-12 flex flex-col justify-center bg-white">
+            <div class="mb-8">
+                <h2 class="text-2xl font-extrabold text-gray-900">Selamat Datang! 👋</h2>
+                <p class="text-sm text-gray-500 mt-1">Masuk ke akunmu untuk melanjutkan progres belajar.</p>
+            </div>
+
+            <form id="formLogin" onsubmit="event.preventDefault();" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Alamat Email</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                        </span>
+                        <input type="email" id="logEmail" required placeholder="nama@email.com" class="w-full bg-slate-50 border border-gray-200 rounded-2xl pl-12 pr-4 py-3.5 text-sm text-gray-800 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primaryLight outline-none transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </span>
+                        <input type="password" id="logPassword" required placeholder="Masukkan password" class="w-full bg-slate-50 border border-gray-200 rounded-2xl pl-12 pr-12 py-3.5 text-sm text-gray-800 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primaryLight outline-none transition">
+                        <button type="button" onclick="togglePass('logPassword')" class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-primary">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="btnLogin" class="w-full bg-primary text-white font-extrabold py-4 rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 mt-2">
+                    <span>Masuk ke Dashboard</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <p class="text-sm text-gray-500">
+                    Belum punya akun belajar? 
+                    <a href="register.html" class="text-primary font-extrabold hover:underline ml-1">Daftar Sekarang</a>
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function togglePass(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+    </script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { auth } from './js/firebase-config.js';
+
+        function showAuthToast(title, msg, type = 'error') {
+            const toast = document.getElementById('authToast');
+            document.getElementById('authToastTitle').innerText = title;
+            document.getElementById('authToastMsg').innerText = msg;
+            toast.className = `fixed top-6 right-6 z-50 transform transition-transform duration-500 bg-white border-l-4 shadow-2xl rounded-2xl p-4 flex items-center gap-3 w-80 translate-x-0 ${type === 'success' ? 'border-green-500' : 'border-red-500'}`;
+            document.getElementById('authToastIcon').innerHTML = type === 'success'
+                ? `<div class="bg-green-100 text-green-600 p-2 rounded-full">✅</div>`
+                : `<div class="bg-red-100 text-red-600 p-2 rounded-full">⚠️</div>`;
+            setTimeout(() => { toast.classList.remove('translate-x-0'); toast.classList.add('translate-x-[150%]'); }, 4500);
+        }
+
+        const btnLogin = document.getElementById('btnLogin');
+        document.getElementById('formLogin').addEventListener('submit', async () => {
+            const email = document.getElementById('logEmail').value.trim();
+            const password = document.getElementById('logPassword').value;
+
+            if (!email || !password) return showAuthToast("Perhatian", "Harap isi email dan password.");
+
+            const originalText = btnLogin.innerHTML;
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = `<span>Memeriksa Akun...</span>`;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                if (!user.emailVerified) {
+                    await signOut(auth); 
+                    showAuthToast("Belum Verifikasi Email!", "Silakan cek kotak masuk atau folder spam email kamu untuk klik tautan verifikasi.");
+                    btnLogin.disabled = false;
+                    btnLogin.innerHTML = originalText;
+                } else {
+                    showAuthToast("Berhasil Masuk!", "Mengalihkan ke beranda...", "success");
+                    setTimeout(() => { window.location.href = 'index.html'; }, 800);
+                }
+            } catch (error) {
+                showAuthToast("Login Gagal", "Pastikan email dan password yang kamu masukkan sudah benar.");
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

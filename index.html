@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beranda - KhodamBelajar</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { primary: '#5E43FF', primaryLight: '#ECE9FF' } } } }</script>
+    <style>
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #5E43FF; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans flex h-screen overflow-hidden">
+
+    <div id="tempat-sidebar" class="z-20 shrink-0 h-full"></div>
+
+    <main class="flex-1 flex flex-col h-full overflow-y-auto p-8 pb-16 max-w-7xl mx-auto w-full custom-scroll">
+        
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+            <div>
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-1">Halo, <span class="user-name-display text-primary">Memuat...</span>! 👋</h2>
+                <p class="text-sm text-gray-500">Siap melanjutkan perjalanan belajarmu hari ini?</p>
+            </div>
+            <button onclick="window.location.href='target.html'" class="bg-primary text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition w-max">+ Buat Target Baru</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 flex items-center gap-5 shadow-sm">
+                <div class="w-14 h-14 bg-primaryLight text-primary rounded-2xl flex items-center justify-center shrink-0">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Total Target</p>
+                    <p class="text-3xl font-black text-gray-900"><span id="statTotalTarget">0</span></p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 flex items-center gap-5 shadow-sm">
+                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-bold text-2xl shrink-0">📚</div>
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Modul Selesai</p>
+                    <p class="text-3xl font-black text-gray-900" id="statMateriSelesai">0 <span class="text-sm font-medium text-gray-400">dari 0</span></p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 flex items-center gap-5 shadow-sm">
+                <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl shrink-0">📈</div>
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Total Progress</p>
+                    <p class="text-3xl font-black text-gray-900" id="statPersenSkor">0<span class="text-sm font-medium text-gray-400">%</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
+            <div class="lg:col-span-2 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-extrabold text-gray-800">Target Belajar Aktif</h3>
+                    <a href="target.html" class="text-xs font-bold text-primary hover:underline">Lihat semua &rarr;</a>
+                </div>
+                <div id="berandaTargetContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5 flex-1">
+                    <div class="col-span-2 bg-white rounded-3xl border border-dashed border-gray-200 flex items-center justify-center p-10 text-gray-400 text-sm">Memuat data target...</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-extrabold text-gray-800">Aktivitas Nilai</h3>
+                    <a href="kuis.html" class="text-xs font-bold text-primary hover:underline">Detail &rarr;</a>
+                </div>
+                <div id="berandaNilaiContainer" class="flex-1 flex flex-col">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex-1 flex flex-col justify-center items-center text-center animate-pulse">
+                        <p class="text-gray-400 text-sm">Memuat riwayat nilai...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-extrabold text-gray-800">Analitik & Fokus Belajar ✨</h3>
+                <span class="text-[11px] font-extrabold text-primary bg-primaryLight px-3 py-1 rounded-full">Real-Time Insight</span>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Penguasaan Bab Materi</h4>
+                        <p class="text-xs text-gray-400 mt-0.5">Rasio seluruh bab yang telah dibaca</p>
+                    </div>
+                    
+                    <div class="flex items-center justify-center py-4">
+                        <div class="relative w-32 h-32 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-gray-100" stroke-width="3.8" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="donutProgressCircle" class="text-primary transition-all duration-1000 ease-out" stroke-dasharray="0, 100" stroke-width="3.8" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="absolute flex flex-col items-center justify-center text-center">
+                                <span id="donutPersenText" class="text-2xl font-black text-gray-900">0%</span>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">Tuntas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-center">
+                        <div class="bg-slate-50 p-2.5 rounded-2xl">
+                            <p class="text-[11px] text-gray-400 font-bold">Bab Selesai</p>
+                            <p id="statBabSelesai" class="text-base font-black text-primary">0</p>
+                        </div>
+                        <div class="bg-slate-50 p-2.5 rounded-2xl">
+                            <p class="text-[11px] text-gray-400 font-bold">Total Bab</p>
+                            <p id="statBabTotal" class="text-base font-black text-gray-800">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Peta Distribusi Target</h4>
+                        <p class="text-xs text-gray-400 mt-0.5 mb-4">Kelengkapan modul tiap folder target</p>
+                        <div id="distribusiTargetContainer" class="space-y-3.5 max-h-44 overflow-y-auto pr-1 custom-scroll">
+                            <p class="text-xs text-gray-400 text-center py-8">Memuat distribusi...</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400">
+                        <span>Perpustakaan Materi</span>
+                        <a href="modul.html" class="font-bold text-primary hover:underline">Buka Modul &rarr;</a>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-primary via-indigo-600 to-indigo-800 p-6 rounded-3xl shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 text-8xl opacity-10 pointer-events-none select-none">🔮</div>
+                    
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider">⚡ Rekomendasi Fokus</span>
+                            <span class="text-lg">🧞‍♂️</span>
+                        </div>
+                        <h4 id="rekomendasiJudul" class="text-lg font-extrabold leading-snug mb-1.5">Menganalisis Progresmu...</h4>
+                        <p id="rekomendasiDeskripsi" class="text-xs text-indigo-100 leading-relaxed">Khodam sedang memeriksa bab mana yang perlu kamu pelajari hari ini.</p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-white/15">
+                        <p id="petuahKhodamText" class="text-[11px] text-indigo-100 italic mb-3">"Konsistensi membaca 1 bab sehari lebih sakti daripada sistem kebut semalam."</p>
+                        <button id="btnRekomendasiAksi" onclick="window.location.href='modul.html'" class="w-full bg-white text-primary font-extrabold py-2.5 rounded-xl hover:bg-indigo-50 transition shadow-md text-xs flex items-center justify-center gap-2">
+                            <span>Mulai Belajar Sekarang</span> &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="js/sidebar.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { db } from './js/firebase-config.js';
+
+        const targetRef = ref(db, 'target_belajar');
+        const nilaiRef = ref(db, 'riwayat_nilai'); 
+
+        const container = document.getElementById('berandaTargetContainer');
+        
+        onValue(targetRef, (snapshot) => {
+            const distribusiContainer = document.getElementById('distribusiTargetContainer');
+            
+            if (snapshot.exists()) {
+                document.getElementById('statTotalTarget').innerText = snapshot.size;
+                container.innerHTML = '';
+                distribusiContainer.innerHTML = '';
+                
+                let count = 0; 
+                let globalTotalModul = 0; 
+                let globalSelesaiModul = 0;
+                let globalTotalBab = 0;
+                let globalSelesaiBab = 0;
+                let modulBelumSelesaiPertama = null;
+                let modulSiapKuisPertama = null;
+
+                snapshot.forEach((childSnapshot) => {
+                    const targetId = childSnapshot.key;
+                    const data = childSnapshot.val();
+                    let totalModulTarget = 0; 
+                    let selesaiModulTarget = 0;
+
+                    const modulList = data.modul_list || {};
+                    if (data.materi && !modulList['legacy']) modulList['legacy'] = { judul_modul: "Modul Pertama", materi: data.materi };
+                    
+                    Object.entries(modulList).forEach(([modulId, m]) => {
+                        totalModulTarget++; 
+                        globalTotalModul++;
+                        let tBab = 0, sBab = 0;
+                        if (m.materi && Array.isArray(m.materi)) {
+                            tBab = m.materi.length;
+                            m.materi.forEach(bab => { if(bab.selesai) sBab++; });
+                        }
+                        globalTotalBab += tBab;
+                        globalSelesaiBab += sBab;
+
+                        if (tBab > 0 && sBab === tBab) { 
+                            selesaiModulTarget++; 
+                            globalSelesaiModul++; 
+                            if (!modulSiapKuisPertama) {
+                                modulSiapKuisPertama = { judulModul: m.judul_modul, judulTarget: data.judul };
+                            }
+                        } else if (!modulBelumSelesaiPertama && tBab > 0) {
+                            modulBelumSelesaiPertama = {
+                                targetId,
+                                modulId,
+                                judulModul: m.judul_modul,
+                                judulTarget: data.judul,
+                                sisaBab: tBab - sBab
+                            };
+                        }
+                    });
+
+                    let persen = totalModulTarget === 0 ? 0 : Math.round((selesaiModulTarget / totalModulTarget) * 100);
+
+                    if (count < 2) { 
+                        const card = document.createElement('div');
+                        card.className = "bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between h-full min-h-[250px] hover:shadow-md hover:border-primary/40 transition cursor-pointer group";
+                        card.onclick = () => window.location.href = 'target.html';
+                        card.innerHTML = `
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="w-11 h-11 rounded-2xl bg-primaryLight text-primary flex items-center justify-center font-bold text-xl">🎯</div>
+                                    <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">Aktif</span>
+                                </div>
+                                <h4 class="font-extrabold text-lg text-gray-800 line-clamp-1 group-hover:text-primary transition">${data.judul}</h4>
+                                <p class="text-sm text-gray-500 line-clamp-2 mt-1">${data.deskripsi || 'Tidak ada deskripsi'}</p>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-gray-50">
+                                <div class="text-xs text-gray-400 font-medium mb-2">Target selesai: <span class="text-gray-600 font-semibold">${data.tanggal}</span></div>
+                                <div class="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden">
+                                    <div class="bg-primary h-2 rounded-full transition-all duration-1000 ease-out" style="width: ${persen}%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 font-medium">
+                                    <span>${selesaiModulTarget} dari ${totalModulTarget} modul</span>
+                                    <span class="font-extrabold text-primary">${persen}%</span>
+                                </div>
+                            </div>
+                        `;
+                        container.prepend(card); 
+                        count++;
+                    }
+
+                    const warnaBar = persen === 100 ? 'bg-green-500' : 'bg-primary';
+                    distribusiContainer.innerHTML += `
+                        <div class="group cursor-pointer" onclick="window.location.href='target.html'">
+                            <div class="flex justify-between items-center text-xs mb-1">
+                                <span class="font-bold text-gray-700 group-hover:text-primary transition truncate max-w-[150px]">📁 ${data.judul}</span>
+                                <span class="text-gray-400 font-semibold">${selesaiModulTarget}/${totalModulTarget} (${persen}%)</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="${warnaBar} h-1.5 rounded-full transition-all duration-700" style="width: ${persen}%"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                const persenModulGlobal = globalTotalModul === 0 ? 0 : Math.round((globalSelesaiModul / globalTotalModul) * 100);
+                document.getElementById('statMateriSelesai').innerHTML = `${globalSelesaiModul} <span class="text-sm font-medium text-gray-400">dari ${globalTotalModul}</span>`;
+                document.getElementById('statPersenSkor').innerHTML = `${persenModulGlobal}<span class="text-sm font-medium text-gray-400">%</span>`;
+
+                const persenBabGlobal = globalTotalBab === 0 ? 0 : Math.round((globalSelesaiBab / globalTotalBab) * 100);
+                document.getElementById('donutProgressCircle').setAttribute('stroke-dasharray', `${persenBabGlobal}, 100`);
+                document.getElementById('donutPersenText').innerText = `${persenBabGlobal}%`;
+                document.getElementById('statBabSelesai').innerText = globalSelesaiBab;
+                document.getElementById('statBabTotal').innerText = globalTotalBab;
+
+                const rekJudul = document.getElementById('rekomendasiJudul');
+                const rekDesk = document.getElementById('rekomendasiDeskripsi');
+                const btnAksi = document.getElementById('btnRekomendasiAksi');
+                const petuahText = document.getElementById('petuahKhodamText');
+
+                if (modulBelumSelesaiPertama) {
+                    rekJudul.innerText = `Lanjutkan: ${modulBelumSelesaiPertama.judulModul}`;
+                    rekDesk.innerText = `Tersisa ${modulBelumSelesaiPertama.sisaBab} bab pada target "${modulBelumSelesaiPertama.judulTarget}". Yuk selesaikan agar siap kuis!`;
+                    petuahText.innerText = `"Sedikit demi sedikit, modul ${modulBelumSelesaiPertama.judulModul} akan tuntas!"`;
+                    btnAksi.onclick = () => window.location.href = 'modul.html';
+                    btnAksi.innerHTML = `<span>Baca Materi Sekarang</span> &rarr;`;
+                } else if (modulSiapKuisPertama) {
+                    rekJudul.innerText = `Semua Bab Tuntas! Saatnya Kuis 🎉`;
+                    rekDesk.innerText = `Materi di modul "${modulSiapKuisPertama.judulModul}" sudah 100% dipelajari. Uji pemahamanmu di halaman Kuis AI!`;
+                    petuahText.innerText = `"Ilmu yang sudah dibaca 100% akan makin kuat kalau diuji lewat latihan soal!"`;
+                    btnAksi.onclick = () => window.location.href = 'kuis.html';
+                    btnAksi.innerHTML = `<span>Kerjakan Kuis AI</span> &rarr;`;
+                } else {
+                    rekJudul.innerText = `Susun Modul Pertamamu`;
+                    rekDesk.innerText = `Panggil Khodam AI di dalam folder targetmu untuk merangkum bab belajar otomatis.`;
+                    btnAksi.onclick = () => window.location.href = 'target.html';
+                    btnAksi.innerHTML = `<span>Buka Target Belajar</span> &rarr;`;
+                }
+
+            } else {
+                document.getElementById('statTotalTarget').innerText = "0";
+                container.innerHTML = `<div class="col-span-2 text-center py-10 border-2 border-dashed border-gray-200 rounded-3xl bg-white cursor-pointer hover:bg-gray-50 transition flex flex-col items-center justify-center" onclick="window.location.href='target.html'"><div class="text-gray-400 mb-2 font-medium text-sm">Belum ada target belajar aktif.</div><button class="text-primary font-bold text-sm hover:underline">+ Buat Target Baru</button></div>`;
+                distribusiContainer.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">Belum ada target belajar.</p>`;
+            }
+        });
+
+        onValue(nilaiRef, (snapshot) => {
+            const containerNilai = document.getElementById('berandaNilaiContainer');
+            if (snapshot.exists()) {
+                const dataArray = [];
+                let totalSkor = 0;
+                let skorTertinggi = 0;
+                let judulTertinggi = "";
+
+                snapshot.forEach(child => {
+                    const val = child.val();
+                    dataArray.push(val);
+                    totalSkor += Number(val.skor || 0);
+                    if(Number(val.skor || 0) > skorTertinggi) { 
+                        skorTertinggi = val.skor; 
+                        judulTertinggi = val.judul_modul; 
+                    }
+                });
+                
+                const rataRata = Math.round(totalSkor / dataArray.length);
+                const enamTerakhir = dataArray.slice(-6);
+                
+                let barsHTML = '';
+                enamTerakhir.forEach((d, idx) => {
+                    const tinggiBalok = Math.max(Number(d.skor || 0), 10); 
+                    const isLast = idx === enamTerakhir.length - 1;
+                    barsHTML += `
+                        <div class="flex flex-col justify-end items-center gap-1.5 h-24 flex-1 group">
+                            <div class="w-full max-w-[28px] rounded-t-lg transition-all duration-500 ${isLast ? 'bg-primary' : 'bg-primaryLight group-hover:bg-primary/60'}" style="height: ${tinggiBalok}%" title="${d.judul_modul}: ${d.skor}"></div>
+                            <span class="text-[10px] font-bold text-gray-400">K${idx+1}</span>
+                        </div>
+                    `;
+                });
+
+                containerNilai.innerHTML = `
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 h-full min-h-[250px] flex flex-col justify-between hover:shadow-md transition cursor-pointer" onclick="window.location.href='kuis.html'">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-wider text-gray-400">Rata-rata Kuis</p>
+                                <p class="text-3xl font-black text-gray-900 mt-0.5">${rataRata}</p>
+                            </div>
+                            <span class="bg-primaryLight text-primary text-[11px] font-bold px-2.5 py-1 rounded-lg">${dataArray.length} Kuis</span>
+                        </div>
+                        <div class="flex items-end justify-between gap-2 border-b border-gray-100 pb-2 my-3">
+                            ${barsHTML}
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-50 px-3.5 py-2.5 rounded-2xl border border-gray-100">
+                            <div>
+                                <p class="text-[10px] text-gray-400 font-extrabold uppercase">Skor Terbaik</p>
+                                <p class="text-xs font-bold text-gray-800 truncate w-36">${judulTertinggi}</p>
+                            </div>
+                            <div class="text-green-600 bg-green-100 px-2.5 py-1 rounded-lg font-black text-sm">${skorTertinggi}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                containerNilai.innerHTML = `
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 h-full min-h-[250px] flex flex-col justify-center items-center text-center cursor-pointer hover:bg-gray-50 transition" onclick="window.location.href='kuis.html'">
+                    <div class="text-3xl mb-2">📝</div>
+                    <p class="text-gray-400 text-xs font-medium">Belum ada aktivitas kuis.<br>Klik untuk mulai menguji dirimu!</p>
+                </div>`;
+            }
+        });
+    </script>
+</body>
+</html>
