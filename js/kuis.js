@@ -1,10 +1,10 @@
 import { ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { db } from './firebase-config.js';
-
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { db, auth } from './firebase-config.js';
 import { GEMINI_API_KEY } from './env.js';
 
-const targetRef = ref(db, 'target_belajar');
-const nilaiRef = ref(db, 'riwayat_nilai');
+let targetRef;
+let nilaiRef;
 
 let kuisSoalData = [];
 let kuisModulAktif = { idTarget: null, idModul: null, judul: "" };
@@ -23,39 +23,87 @@ window.showToast = (title, message, type = "success") => {
     setTimeout(() => { toast.classList.remove('translate-x-0'); toast.classList.add('translate-x-[150%]'); }, 4000);
 };
 
-onValue(targetRef, (snapshot) => {
-    cacheTargetKuis = {};
-    listModulKuis = [];
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        targetRef = ref(db, `users/${user.uid}/target_belajar`);
+        nilaiRef = ref(db, `users/${user.uid}/riwayat_nilai`);
+        
+        onValue(targetRef, (snapshot) => {
+            cacheTargetKuis = {};
+            listModulKuis = [];
 
-    if (snapshot.exists()) {
-        snapshot.forEach((child) => {
-            const targetId = child.key;
-            const data = child.val();
-            cacheTargetKuis[targetId] = data; 
-            const modulList = data.modul_list || {};
-            if (data.materi && !modulList['legacy']) modulList['legacy'] = { judul_modul: "Modul Utama", materi: data.materi };
+            if (snapshot.exists()) {
+                snapshot.forEach((child) => {
+                    const targetId = child.key;
+                    const data = child.val();
+                    cacheTargetKuis[targetId] = data; 
+                    const modulList = data.modul_list || {};
+                    if (data.materi && !modulList['legacy']) modulList['legacy'] = { judul_modul: "Modul Utama", materi: data.materi };
 
-            Object.entries(modulList).forEach(([modulId, modulData]) => {
-                let tBab = 0, sBab = 0;
-                if(modulData.materi && Array.isArray(modulData.materi)) {
-                    tBab = modulData.materi.length;
-                    modulData.materi.forEach(b => { if(b.selesai) sBab++; });
-                }
-                const isSelesai = (tBab > 0 && sBab === tBab);
+                    Object.entries(modulList).forEach(([modulId, modulData]) => {
+                        let tBab = 0, sBab = 0;
+                        if(modulData.materi && Array.isArray(modulData.materi)) {
+                            tBab = modulData.materi.length;
+                            modulData.materi.forEach(b => { if(b.selesai) sBab++; });
+                        }
+                        const isSelesai = (tBab > 0 && sBab === tBab);
 
-                listModulKuis.push({
-                    targetId,
-                    modulId,
-                    judulTarget: data.judul || "Tanpa Target",
-                    judulModul: modulData.judul_modul || "Modul Tanpa Judul",
-                    tBab,
-                    sBab,
-                    isSelesai
+                        listModulKuis.push({
+                            targetId,
+                            modulId,
+                            judulTarget: data.judul || "Tanpa Target",
+                            judulModul: modulData.judul_modul || "Modul Tanpa Judul",
+                            tBab,
+                            sBab,
+                            isSelesai
+                        });
+                    });
                 });
-            });
+            }
+            renderKuisTersedia();
+        });
+
+        onValue(nilaiRef, (snapshot) => {
+            allRiwayatData = {}; 
+            listRiwayatArray = [];
+            
+            let totalSkor = 0;
+            let skorTertinggi = 0;
+            let judulTertinggi = "-";
+            let totalKuis = 0;
+
+            if (snapshot.exists()) {
+                snapshot.forEach((child) => { 
+                    const val = child.val();
+                    const catatanBersih = (val.catatan && val.catatan !== '\${data.catatan}') ? val.catatan : '';
+                    const d = { id: child.key, ...val, catatan: catatanBersih };
+                    
+                    listRiwayatArray.push(d); 
+                    allRiwayatData[child.key] = d; 
+                    
+                    totalKuis++;
+                    totalSkor += Number(d.skor || 0);
+                    if (Number(d.skor || 0) > skorTertinggi) {
+                        skorTertinggi = d.skor;
+                        judulTertinggi = d.judul_modul;
+                    }
+                });
+                
+                document.getElementById('rekapRata').innerText = (totalSkor / totalKuis).toFixed(1);
+                document.getElementById('rekapTotal').innerText = totalKuis;
+                document.getElementById('rekapTinggi').innerText = skorTertinggi;
+                document.getElementById('rekapTinggiJudul').innerText = judulTertinggi;
+
+                listRiwayatArray.reverse();
+            } else {
+                document.getElementById('rekapRata').innerText = "0";
+                document.getElementById('rekapTotal').innerText = "0";
+                document.getElementById('rekapTinggi').innerText = "0";
+                document.getElementById('rekapTinggiJudul').innerText = "-";
+            }
+            renderRiwayatNilai();
         });
     }
-    renderKuisTersedia();
 });
 
 window.filterKuisTersedia = () => {
@@ -132,7 +180,7 @@ window.mulaiKuisAi = async (tId, mId, judulModul) => {
         const infoKonteks = konteksMateri ? ` WAJIB buat soal yang 100% mengacu pada isi materi bacaan berikut: [${konteksMateri.substring(0, 14000)}].` : "";
         const prompt = `Kamu adalah penguji akademis profesional. Buatkan tepat 10 soal pilihan ganda yang menguji pemahaman mendalam tentang modul "${judulModul}".${infoKonteks} ATURAN: 1. Setiap soal wajib memiliki 4 opsi jawaban tanpa awalan huruf A/B/C/D. 2. Nilai pada "jawaban_benar" HARUS SAMA PERSIS (identik karakter demi karakter) dengan salah satu teks di dalam array "pilihan". 3. Kembalikan HANYA dalam format JSON Array murni: [{"soal": "Pertanyaan...", "pilihan": ["Opsi 1", "Opsi 2", "Opsi 3", "Opsi 4"], "jawaban_benar": "Opsi 1"}]`;
         
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY.trim()}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY.trim()}`, {
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
             body: JSON.stringify({ 
@@ -243,47 +291,6 @@ window.prosesSubmitKuis = async () => {
     } catch (error) { showToast("Gagal", "Skor gagal disimpan ke database.", "error"); }
 };
 
-onValue(nilaiRef, (snapshot) => {
-    allRiwayatData = {}; 
-    listRiwayatArray = [];
-    
-    let totalSkor = 0;
-    let skorTertinggi = 0;
-    let judulTertinggi = "-";
-    let totalKuis = 0;
-
-    if (snapshot.exists()) {
-        snapshot.forEach((child) => { 
-            const val = child.val();
-            const catatanBersih = (val.catatan && val.catatan !== '\${data.catatan}') ? val.catatan : '';
-            const d = { id: child.key, ...val, catatan: catatanBersih };
-            
-            listRiwayatArray.push(d); 
-            allRiwayatData[child.key] = d; 
-            
-            totalKuis++;
-            totalSkor += Number(d.skor || 0);
-            if (Number(d.skor || 0) > skorTertinggi) {
-                skorTertinggi = d.skor;
-                judulTertinggi = d.judul_modul;
-            }
-        });
-        
-        document.getElementById('rekapRata').innerText = (totalSkor / totalKuis).toFixed(1);
-        document.getElementById('rekapTotal').innerText = totalKuis;
-        document.getElementById('rekapTinggi').innerText = skorTertinggi;
-        document.getElementById('rekapTinggiJudul').innerText = judulTertinggi;
-
-        listRiwayatArray.reverse();
-    } else {
-        document.getElementById('rekapRata').innerText = "0";
-        document.getElementById('rekapTotal').innerText = "0";
-        document.getElementById('rekapTinggi').innerText = "0";
-        document.getElementById('rekapTinggiJudul').innerText = "-";
-    }
-    renderRiwayatNilai();
-});
-
 window.filterRiwayatNilai = () => {
     renderRiwayatNilai();
 };
@@ -325,7 +332,7 @@ function renderRiwayatNilai() {
                 <td class="p-5 text-sm text-gray-500 whitespace-nowrap">${data.tanggal}</td>
                 <td class="p-5 text-sm">
                     <p class="font-bold text-gray-800">${data.judul_modul}</p>
-                    ${data.catatan ? `<div class="text-xs text-gray-500 mt-1.5 flex items-center gap-1"><span class="bg-gray-100 px-2.5 py-1 rounded-lg">📝 ${data.catatan}</span></div>` : ''}
+                    ${data.catatan ? `<div class="text-xs text-gray-500 mt-1.5 flex items-center gap-1"><span class="bg-gray-100 px-2.5 py-1 rounded-lg">📝 \${data.catatan}</span></div>` : ''}
                 </td>
                 <td class="p-5 text-center"><span class="px-3 py-1 rounded-xl text-base ${warnaSkor}">${data.skor}</span></td>
                 <td class="p-5 text-center text-sm text-gray-500">${jumlahSoal} soal</td>
@@ -406,7 +413,7 @@ window.bukaReview = async (id) => {
         try {
             const prompt = `Sebagai mentor bernama Khodam, berikan masukan singkat (maksimal 2 paragraf pendek) untuk murid yang baru saja mengerjakan kuis materi "${data.judul_modul}". Murid ini salah menjawab beberapa pertanyaan berikut:\n\n${daftarSalah.join('\n')}\n\nBeritahu dia topik atau teori spesifik apa yang harus dia pelajari lagi berdasarkan kesalahannya tersebut. Gunakan bahasa Indonesia kasual yang memotivasi.`;
             
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY.trim()}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY.trim()}`, {
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ contents: [{ parts: [{text: prompt}] }] }) 
@@ -438,13 +445,13 @@ window.tutupModalCatatan = () => { document.getElementById('modalCatatan').class
 
 window.simpanCatatan = async () => {
     const id = document.getElementById('editNilaiId').value, catatan = document.getElementById('inputCatatan').value;
-    try { await update(ref(db, `riwayat_nilai/${id}`), { catatan: catatan }); showToast("Tersimpan", "Catatan refleksi diupdate."); tutupModalCatatan(); } 
+    try { await update(ref(db, `users/${auth.currentUser.uid}/riwayat_nilai/${id}`), { catatan: catatan }); showToast("Tersimpan", "Catatan refleksi diupdate."); tutupModalCatatan(); } 
     catch (err) { showToast("Gagal", "Gagal menyimpan catatan.", "error"); }
 };
 
 window.hapusNilai = async (id) => {
     if(confirm("Hapus riwayat nilai ini?")) {
-        try { await remove(ref(db, `riwayat_nilai/${id}`)); showToast("Terhapus", "Riwayat nilai dibuang."); } 
+        try { await remove(ref(db, `users/${auth.currentUser.uid}/riwayat_nilai/${id}`)); showToast("Terhapus", "Riwayat nilai dibuang."); } 
         catch(err) { showToast("Gagal", "Gagal menghapus data.", "error"); }
     }
 };

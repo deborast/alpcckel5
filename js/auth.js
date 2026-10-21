@@ -38,6 +38,8 @@ onAuthStateChanged(auth, (user) => {
 });
 
 window.logoutUser = () => {
+    localStorage.clear();
+    sessionStorage.clear();
     signOut(auth).then(() => {
         window.location.href = 'login.html';
     }).catch((error) => {

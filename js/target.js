@@ -1,9 +1,9 @@
 import { ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { db } from './firebase-config.js';
-
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { db, auth } from './firebase-config.js';
 import { GEMINI_API_KEY } from './env.js';
-const targetRef = ref(db, 'target_belajar');
 
+let targetRef;
 let allTargetsData = {};
 let activeTargetId = null;
 let loadingInterval; 
@@ -25,11 +25,16 @@ window.showToast = (title, message, type = "success") => {
     setTimeout(() => { toast.classList.remove('translate-x-0'); toast.classList.add('translate-x-[150%]'); }, 4000);
 };
 
-onValue(targetRef, (snapshot) => {
-    allTargetsData = {};
-    if (snapshot.exists()) snapshot.forEach((child) => { allTargetsData[child.key] = child.val(); });
-    renderTargetList();
-    if (activeTargetId && !document.getElementById('viewFolder').classList.contains('hidden')) renderFolder(activeTargetId);
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        targetRef = ref(db, `users/${user.uid}/target_belajar`);
+        onValue(targetRef, (snapshot) => {
+            allTargetsData = {};
+            if (snapshot.exists()) snapshot.forEach((child) => { allTargetsData[child.key] = child.val(); });
+            renderTargetList();
+            if (activeTargetId && !document.getElementById('viewFolder').classList.contains('hidden')) renderFolder(activeTargetId);
+        });
+    }
 });
 
 window.filterTargetList = () => {
@@ -136,7 +141,7 @@ function renderFolder(id) {
 window.hapusModul = async (idTarget, idModul) => {
     if(confirm("Yakin ingin menghapus modul ini beserta isinya?")) {
         try {
-            await remove(ref(db, `target_belajar/${idTarget}/modul_list/${idModul}`));
+            await remove(ref(db, `users/${auth.currentUser.uid}/target_belajar/${idTarget}/modul_list/${idModul}`));
             showToast("Terhapus", "Modul berhasil dihapus dari Target Belajar.");
         } catch(err) {
             showToast("Gagal", "Gagal menghapus modul.", "error");
@@ -169,7 +174,7 @@ window.generateAI = async () => {
         let partsData = [{ text: promptMateri }];
         if (filePdf) { const base64Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(filePdf); }); partsData.push({ inline_data: { mime_type: "application/pdf", data: base64Data } }); }
         
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY.trim()}`, { 
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY.trim()}`, {
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
             body: JSON.stringify({ 
@@ -185,7 +190,7 @@ window.generateAI = async () => {
         rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
         const parsedData = JSON.parse(rawText);
 
-        await push(ref(db, `target_belajar/${activeTargetId}/modul_list`), { judul_modul: topikModul, materi: parsedData, tanggal_dibuat: new Date().toLocaleDateString('id-ID') });
+        await push(ref(db, `users/${auth.currentUser.uid}/target_belajar/${activeTargetId}/modul_list`), { judul_modul: topikModul, materi: parsedData, tanggal_dibuat: new Date().toLocaleDateString('id-ID') });
         showToast("Berhasil!", "Modul sukses disatukan ke Folder Target."); tutupModalKhodam();
     } catch (error) { 
         console.error("Detail Error Materi:", error);
@@ -198,6 +203,6 @@ window.generateAI = async () => {
 
 window.bukaModal = () => { document.getElementById('inputId').value = ""; document.getElementById('inputJudul').value = ""; document.getElementById('inputDeskripsi').value = ""; document.getElementById('inputTanggal').value = ""; document.getElementById('modalForm').classList.remove('hidden'); document.getElementById('modalForm').classList.add('flex'); };
 window.tutupModal = () => { document.getElementById('modalForm').classList.add('hidden'); document.getElementById('modalForm').classList.remove('flex'); };
-window.simpanData = () => { const id = document.getElementById('inputId').value, judul = document.getElementById('inputJudul').value, deskripsi = document.getElementById('inputDeskripsi').value, tanggal = document.getElementById('inputTanggal').value; if(judul === "" || tanggal === "") return showToast("Gagal", "Isi form!", "error"); if (id === "") push(targetRef, { judul, deskripsi, tanggal, dibuat: Date.now() }); else update(ref(db, 'target_belajar/' + id), { judul, deskripsi, tanggal }); tutupModal(); };
+window.simpanData = () => { const id = document.getElementById('inputId').value, judul = document.getElementById('inputJudul').value, deskripsi = document.getElementById('inputDeskripsi').value, tanggal = document.getElementById('inputTanggal').value; if(judul === "" || tanggal === "") return showToast("Gagal", "Isi form!", "error"); if (id === "") push(targetRef, { judul, deskripsi, tanggal, dibuat: Date.now() }); else update(ref(db, `users/${auth.currentUser.uid}/target_belajar/${id}`), { judul, deskripsi, tanggal }); tutupModal(); };
 window.editTarget = (id, judul, deskripsi, tanggal) => { document.getElementById('inputId').value = id; document.getElementById('inputJudul').value = judul; document.getElementById('inputDeskripsi').value = deskripsi; document.getElementById('inputTanggal').value = tanggal; document.getElementById('modalForm').classList.remove('hidden'); document.getElementById('modalForm').classList.add('flex'); };
-window.hapusTarget = (id) => { if(confirm("Hapus target ini beserta isinya?")) remove(ref(db, 'target_belajar/' + id)); };
+window.hapusTarget = (id) => { if(confirm("Hapus target ini beserta isinya?")) remove(ref(db, `users/${auth.currentUser.uid}/target_belajar/${id}`)); };
