@@ -41,6 +41,21 @@ window.filterTargetList = () => {
     renderTargetList();
 };
 
+function getBadgeDeadline(tanggal, persen) {
+    if (!tanggal) return { text: "Tidak ada tenggat", color: "bg-gray-100 text-gray-500" };
+    const targetDate = new Date(tanggal);
+    const today = new Date();
+    targetDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+    
+    if (persen === 100) return { text: "✅ Tuntas", color: "bg-green-100 text-green-700" };
+    if (diffDays > 3) return { text: `⏳ Sisa ${diffDays} Hari`, color: "bg-emerald-100 text-emerald-700" };
+    if (diffDays > 0 && diffDays <= 3) return { text: `⚠️ Sisa ${diffDays} Hari`, color: "bg-orange-100 text-orange-700" };
+    if (diffDays === 0) return { text: "🔥 Tenggat Hari Ini", color: "bg-red-100 text-red-600" };
+    return { text: `🚨 Telat ${Math.abs(diffDays)} Hari`, color: "bg-red-500 text-white animate-pulse" };
+}
+
 function renderTargetList() {
     const container = document.getElementById('containerTargetList');
     if (!container) return;
@@ -62,16 +77,22 @@ function renderTargetList() {
         const safeJudul = (data.judul || '').replace(/'/g, "\\'");
         const safeDesk = (data.deskripsi || '').replace(/'/g, "\\'");
 
+        const badge = getBadgeDeadline(data.tanggal, persenTarget);
+
         const card = document.createElement('div');
         card.className = "bg-white p-6 rounded-2xl shadow-sm border flex flex-col justify-between h-64 hover:shadow-md hover:border-primary transition cursor-pointer group";
         card.onclick = () => bukaFolder(id); 
         card.innerHTML = `
             <div>
-                <div class="w-12 h-12 rounded-xl bg-primaryLight text-primary flex items-center justify-center font-bold mb-4">📁</div>
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-primaryLight text-primary flex items-center justify-center font-bold">📁</div>
+                    <span class="text-[11px] font-extrabold px-3 py-1 rounded-full ${badge.color}">${badge.text}</span>
+                </div>
                 <h3 class="font-bold text-xl text-gray-800 line-clamp-1 group-hover:text-primary transition">${data.judul}</h3>
                 <p class="text-sm text-gray-500 mt-1 line-clamp-2">${data.deskripsi || 'Tidak ada deskripsi'}</p>
             </div>
             <div class="mt-auto pt-4 border-t">
+                <div class="text-xs text-gray-400 font-medium mb-2">Batas waktu: <span class="font-bold text-gray-600">${data.tanggal || '-'}</span></div>
                 <div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-gray-500">${selesaiModul} / ${totalModul} Modul</span><span class="text-xs font-bold text-primary">${persenTarget}%</span></div>
                 <div class="w-full bg-gray-100 rounded-full h-1.5 mb-3 overflow-hidden"><div class="bg-primary h-1.5 rounded-full" style="width: ${persenTarget}%"></div></div>
                 <div class="flex gap-2">
@@ -100,15 +121,20 @@ window.filterModulFolder = () => {
 function renderFolder(id) {
     const data = allTargetsData[id];
     if (!data) return;
-    document.getElementById('folderJudul').innerText = "Target: " + data.judul;
+    
+    let totalModul = 0, selesaiModul = 0;
+    const modulList = data.modul_list || {};
+    if (data.materi && !modulList['legacy']) modulList['legacy'] = { judul_modul: "Modul Pertama", materi: data.materi };
+    Object.values(modulList).forEach(m => { totalModul++; if (calcProgressBab(m).isModulSelesai) selesaiModul++; });
+    const persenTarget = totalModul === 0 ? 0 : Math.round((selesaiModul/totalModul)*100);
+    const badge = getBadgeDeadline(data.tanggal, persenTarget);
+
+    document.getElementById('folderJudul').innerHTML = `${data.judul} <span class="text-sm align-middle ml-2 px-3 py-1 rounded-full ${badge.color}">${badge.text}</span>`;
     document.getElementById('folderDeskripsi').innerText = data.deskripsi || "Pilih atau buat modul pembelajaran baru di bawah ini.";
     const containerModul = document.getElementById('containerModulList');
     
     const keyword = (document.getElementById('searchModulFolderInput')?.value || '').toLowerCase();
     containerModul.innerHTML = `<div onclick="bukaModalKhodam()" class="border-2 border-dashed border-primaryLight bg-white rounded-2xl flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-primaryLight transition h-48 group"><div class="text-3xl mb-2 group-hover:scale-125 transition-transform">🔮</div><h4 class="font-bold text-primary text-center">Panggil Khodam AI</h4></div>`;
-
-    const modulList = data.modul_list || {};
-    if (data.materi && !modulList['legacy']) modulList['legacy'] = { judul_modul: "Modul Pertama", materi: data.materi };
 
     Object.entries(modulList).forEach(([modulId, modulData]) => {
         if (!(modulData.judul_modul || '').toLowerCase().includes(keyword)) return;
@@ -155,24 +181,54 @@ window.bukaModalKhodam = () => { document.getElementById('aiTopik').value = ""; 
 window.tutupModalKhodam = () => { document.getElementById('modalKhodam').classList.add('hidden'); document.getElementById('modalKhodam').classList.remove('flex'); hapusPdf(); clearInterval(loadingInterval); };
 
 window.generateAI = async () => {
-    const formArea = document.getElementById('formKhodamArea'), loadArea = document.getElementById('aiLoadingArea'), teksLoading = document.getElementById('loadingText');
-    const topikModul = document.getElementById('aiTopik').value, bab = document.getElementById('aiBab').value, kisi = document.getElementById('aiKisi') ? document.getElementById('aiKisi').value : "", filePdf = document.getElementById('aiPdf').files[0];
+    const formArea = document.getElementById('formKhodamArea');
+    const loadArea = document.getElementById('aiLoadingArea');
+    const teksLoading = document.getElementById('loadingText');
+
+    const topikModul = document.getElementById('aiTopik').value;
+    const bab = document.getElementById('aiBab').value;
+    const kisi = document.getElementById('aiKisi') ? document.getElementById('aiKisi').value : "";
+    const filePdf = document.getElementById('aiPdf').files[0];
 
     if(!topikModul) return showToast("Tunggu Dulu!", "Judul modul wajib diisi.", "error");
 
-    formArea.classList.add('hidden'); loadArea.classList.remove('hidden'); loadArea.classList.add('flex');
-    const teksVariasi = ["Membaca referensi...", "Menganalisis isi materi...", "Menyusun struktur bab...", "Menulis materi mendalam..."]; 
-    let idx = 0; loadingInterval = setInterval(() => { idx = (idx + 1) % teksVariasi.length; teksLoading.innerText = teksVariasi[idx]; }, 2000);
+    formArea.classList.add('hidden'); 
+    loadArea.classList.remove('hidden'); 
+    loadArea.classList.add('flex');
+    
+    const teksVariasi = [
+        "Membaca referensi materi...", 
+        "Menganalisis struktur kurikulum...", 
+        "Menyusun bab mendalam...", 
+        "Menulis penjelasan lengkap..."
+    ]; 
+    let idx = 0; 
+    loadingInterval = setInterval(() => { 
+        idx = (idx + 1) % teksVariasi.length; 
+        teksLoading.innerText = teksVariasi[idx]; 
+    }, 2000);
 
     try {
-        const namaTarget = (allTargetsData[activeTargetId] && allTargetsData[activeTargetId].judul) ? allTargetsData[activeTargetId].judul : topikModul;
+        const currentTargetId = typeof activeTargetId !== 'undefined' ? activeTargetId : activeTargetIdForAi;
+        const dataTarget = typeof allTargetsData !== 'undefined' ? allTargetsData : allData;
+        
+        const namaTarget = (dataTarget[currentTargetId] && dataTarget[currentTargetId].judul) ? dataTarget[currentTargetId].judul : topikModul;
+        
         const infoKisi = kisi ? ` Fokuskan pembahasan pada kisi-kisi: ${kisi}.` : "";
         const infoPdf = filePdf ? " Gunakan dokumen PDF terlampir sebagai referensi utama." : "";
 
         const promptMateri = `Kamu adalah dosen dan instruktur ahli di platform KhodamBelajar. Buatkan tepat ${bab} bab materi pembelajaran yang SANGAT MENDALAM, TERSTRUKTUR, dan PANJANG untuk modul "${topikModul}" (bagian dari target belajar: "${namaTarget}").${infoKisi}${infoPdf} ATURAN WAJIB: 1. Setiap bab WAJIB berisi penjelasan materi yang sangat detail dan komprehensif (minimal 4 sampai 5 paragraf panjang per bab, total minimal 250 kata per bab). 2. DILARANG KERAS menulis ringkasan singkat 1-2 kalimat! Jabarkan teori dasar, cara kerja teknis, langkah implementasi, serta contoh studi kasus nyata secara lengkap. 3. Pisahkan setiap paragraf di dalam string "ringkasan" menggunakan karakter \\n\\n. 4. WAJIB balas HANYA dengan JSON Array murni tanpa markdown dengan format persis seperti ini: [{"bab": 1, "judul": "Judul Bab", "ringkasan": "Paragraf 1 yang panjang dan detail...\\n\\nParagraf 2 yang mendalam...\\n\\nParagraf 3 beserta contoh kasus...\\n\\nParagraf 4 kesimpulan teknis..."}]`;
 
         let partsData = [{ text: promptMateri }];
-        if (filePdf) { const base64Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(filePdf); }); partsData.push({ inline_data: { mime_type: "application/pdf", data: base64Data } }); }
+        
+        if (filePdf) { 
+            const base64Data = await new Promise((resolve) => { 
+                const reader = new FileReader(); 
+                reader.onload = () => resolve(reader.result.split(',')[1]); 
+                reader.readAsDataURL(filePdf); 
+            }); 
+            partsData.push({ inline_data: { mime_type: "application/pdf", data: base64Data } }); 
+        }
         
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY.trim()}`, {
             method: 'POST', 
@@ -187,18 +243,31 @@ window.generateAI = async () => {
         
         const hasilApi = await response.json(); 
         let rawText = hasilApi.candidates[0].content.parts[0].text;
-        rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        
+        const match = rawText.match(/\[[\s\S]*\]/);
+        if (match) { rawText = match[0]; }
+        else { rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim(); }
+        
         const parsedData = JSON.parse(rawText);
 
-        await push(ref(db, `users/${auth.currentUser.uid}/target_belajar/${activeTargetId}/modul_list`), { judul_modul: topikModul, materi: parsedData, tanggal_dibuat: new Date().toLocaleDateString('id-ID') });
-        showToast("Berhasil!", "Modul sukses disatukan ke Folder Target."); tutupModalKhodam();
+        await push(ref(db, `users/${auth.currentUser.uid}/target_belajar/${currentTargetId}/modul_list`), { 
+            judul_modul: topikModul, 
+            materi: parsedData, 
+            tanggal_dibuat: new Date().toLocaleDateString('id-ID') 
+        });
+        
+        showToast("Berhasil!", "Modul sukses dibuat dan disatukan."); 
+        tutupModalKhodam();
+        
     } catch (error) { 
         console.error("Detail Error Materi:", error);
         showToast("Gagal", "Koneksi AI sedang sibuk, silakan coba lagi.", "error"); 
         formArea.classList.remove('hidden'); 
         loadArea.classList.add('hidden'); 
         loadArea.classList.remove('flex'); 
-    } finally { clearInterval(loadingInterval); }
+    } finally { 
+        clearInterval(loadingInterval); 
+    }
 };
 
 window.bukaModal = () => { document.getElementById('inputId').value = ""; document.getElementById('inputJudul').value = ""; document.getElementById('inputDeskripsi').value = ""; document.getElementById('inputTanggal').value = ""; document.getElementById('modalForm').classList.remove('hidden'); document.getElementById('modalForm').classList.add('flex'); };

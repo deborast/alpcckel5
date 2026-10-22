@@ -2,7 +2,6 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { auth, db } from './firebase-config.js';
 
-
 onAuthStateChanged(auth, (user) => {
     const isAuthPage = window.location.href.includes('login.html') || window.location.href.includes('register.html');
 
@@ -14,23 +13,28 @@ onAuthStateChanged(auth, (user) => {
 
             document.querySelectorAll('.user-name-display').forEach(el => el.innerText = user.displayName || "Pengguna");
         
-            document.querySelectorAll('.user-photo-display').forEach(el => {
-                if (user.photoURL) {
-                    el.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover rounded-full">`;
-                } else {
-                    const nama = user.displayName || "P";
-                    el.innerText = nama.charAt(0).toUpperCase();
-                }
-            });
-
             onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                if (snapshot.exists() && snapshot.val().bio) {
-                    const teksBio = snapshot.val().bio;
-                    document.querySelectorAll('.user-bio-display').forEach(el => el.innerText = teksBio);
-                } else {
-                    document.querySelectorAll('.user-bio-display').forEach(el => el.innerText = "hi !");
+                const inisial = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'P';
+                let fotoHtml = inisial;
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    if (data.bio) {
+                        document.querySelectorAll('.user-bio-display').forEach(el => el.innerText = data.bio);
+                    } else {
+                        document.querySelectorAll('.user-bio-display').forEach(el => el.innerText = "hi !");
+                    }
+
+                    if (data.foto && data.foto.length > 50) {
+                        fotoHtml = `<img src="${data.foto}" class="w-full h-full object-cover rounded-full">`;
+                    }
                 }
-            }, { onlyOnce: true });
+
+                document.querySelectorAll('.user-photo-display').forEach(el => {
+                    el.innerHTML = fotoHtml;
+                });
+            }); 
         }
     } else {
         if (!isAuthPage) window.location.href = 'login.html';

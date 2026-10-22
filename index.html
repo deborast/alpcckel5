@@ -57,7 +57,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
             <div class="lg:col-span-2 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-extrabold text-gray-800">Target Belajar Aktif</h3>
+                    <h3 class="text-lg font-extrabold text-gray-800">Target Belajar</h3>
                     <a href="target.html" class="text-xs font-bold text-primary hover:underline">Lihat semua &rarr;</a>
                 </div>
                 <div id="berandaTargetContainer" class="grid grid-cols-1 md:grid-cols-2 gap-5 flex-1">
@@ -223,6 +223,34 @@
 
                             let persen = totalModulTarget === 0 ? 0 : Math.round((selesaiModulTarget / totalModulTarget) * 100);
 
+                            let badgeStatus = "Tidak ada tenggat";
+                            let badgeColor = "bg-gray-100 text-gray-500";
+                            
+                            if (data.tanggal) {
+                                const targetDate = new Date(data.tanggal);
+                                const today = new Date();
+                                targetDate.setHours(0, 0, 0, 0);
+                                today.setHours(0, 0, 0, 0);
+                                const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+                                
+                                if (persen === 100) {
+                                    badgeStatus = "✅ Tuntas";
+                                    badgeColor = "bg-green-100 text-green-700";
+                                } else if (diffDays > 3) {
+                                    badgeStatus = `⏳ Sisa ${diffDays} Hari`;
+                                    badgeColor = "bg-emerald-100 text-emerald-700";
+                                } else if (diffDays > 0 && diffDays <= 3) {
+                                    badgeStatus = `⚠️ Sisa ${diffDays} Hari`;
+                                    badgeColor = "bg-orange-100 text-orange-700";
+                                } else if (diffDays === 0) {
+                                    badgeStatus = "🔥 Tenggat Hari Ini";
+                                    badgeColor = "bg-red-100 text-red-600";
+                                } else {
+                                    badgeStatus = `🚨 Telat ${Math.abs(diffDays)} Hari`;
+                                    badgeColor = "bg-red-500 text-white animate-pulse";
+                                }
+                            }
+
                             if (count < 2) { 
                                 const card = document.createElement('div');
                                 card.className = "bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between h-full min-h-[250px] hover:shadow-md hover:border-primary/40 transition cursor-pointer group";
@@ -231,13 +259,13 @@
                                     <div>
                                         <div class="flex justify-between items-start mb-4">
                                             <div class="w-11 h-11 rounded-2xl bg-primaryLight text-primary flex items-center justify-center font-bold text-xl">🎯</div>
-                                            <span class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">Aktif</span>
+                                            <span class="${badgeColor} text-[10px] font-extrabold px-3 py-1 rounded-full">${badgeStatus}</span>
                                         </div>
                                         <h4 class="font-extrabold text-lg text-gray-800 line-clamp-1 group-hover:text-primary transition">${data.judul}</h4>
                                         <p class="text-sm text-gray-500 line-clamp-2 mt-1">${data.deskripsi || 'Tidak ada deskripsi'}</p>
                                     </div>
                                     <div class="mt-6 pt-4 border-t border-gray-50">
-                                        <div class="text-xs text-gray-400 font-medium mb-2">Target selesai: <span class="text-gray-600 font-semibold">${data.tanggal}</span></div>
+                                        <div class="text-xs text-gray-400 font-medium mb-2">Target Selesai: <span class="text-gray-600 font-semibold">${data.tanggal || '-'}</span></div>
                                         <div class="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden">
                                             <div class="bg-primary h-2 rounded-full transition-all duration-1000 ease-out" style="width: ${persen}%"></div>
                                         </div>

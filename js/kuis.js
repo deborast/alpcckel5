@@ -17,7 +17,9 @@ let listRiwayatArray = [];
 
 window.showToast = (title, message, type = "success") => {
     const toast = document.getElementById('customToast');
-    document.getElementById('toastTitle').innerText = title; document.getElementById('toastMessage').innerText = message;
+    if (!toast) return;
+    document.getElementById('toastTitle').innerText = title; 
+    document.getElementById('toastMessage').innerText = message;
     toast.className = `fixed top-8 right-8 z-[100] transform transition-transform duration-500 bg-white border-l-4 shadow-2xl rounded-2xl p-5 flex items-start gap-4 w-80 translate-x-0 ${type === 'success' ? 'border-green-500' : 'border-red-500'}`;
     document.getElementById('toastIcon').innerHTML = type === 'success' ? `<div class="bg-green-100 text-green-500 p-2 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>` : `<div class="bg-red-100 text-red-500 p-2 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>`;
     setTimeout(() => { toast.classList.remove('translate-x-0'); toast.classList.add('translate-x-[150%]'); }, 4000);
@@ -89,17 +91,17 @@ onAuthStateChanged(auth, (user) => {
                     }
                 });
                 
-                document.getElementById('rekapRata').innerText = (totalSkor / totalKuis).toFixed(1);
-                document.getElementById('rekapTotal').innerText = totalKuis;
-                document.getElementById('rekapTinggi').innerText = skorTertinggi;
-                document.getElementById('rekapTinggiJudul').innerText = judulTertinggi;
+                if(document.getElementById('rekapRata')) document.getElementById('rekapRata').innerText = (totalSkor / totalKuis).toFixed(1);
+                if(document.getElementById('rekapTotal')) document.getElementById('rekapTotal').innerText = totalKuis;
+                if(document.getElementById('rekapTinggi')) document.getElementById('rekapTinggi').innerText = skorTertinggi;
+                if(document.getElementById('rekapTinggiJudul')) document.getElementById('rekapTinggiJudul').innerText = judulTertinggi;
 
                 listRiwayatArray.reverse();
             } else {
-                document.getElementById('rekapRata').innerText = "0";
-                document.getElementById('rekapTotal').innerText = "0";
-                document.getElementById('rekapTinggi').innerText = "0";
-                document.getElementById('rekapTinggiJudul').innerText = "-";
+                if(document.getElementById('rekapRata')) document.getElementById('rekapRata').innerText = "0";
+                if(document.getElementById('rekapTotal')) document.getElementById('rekapTotal').innerText = "0";
+                if(document.getElementById('rekapTinggi')) document.getElementById('rekapTinggi').innerText = "0";
+                if(document.getElementById('rekapTinggiJudul')) document.getElementById('rekapTinggiJudul').innerText = "-";
             }
             renderRiwayatNilai();
         });
@@ -115,8 +117,11 @@ function renderKuisTersedia() {
     if (!container) return;
     container.innerHTML = '';
 
-    const keyword = (document.getElementById('searchKuisTersedia')?.value || '').toLowerCase();
-    const statusFilter = document.getElementById('filterStatusKuis')?.value || 'all';
+    const searchEl = document.getElementById('searchKuisTersedia');
+    const keyword = (searchEl ? searchEl.value : '').toLowerCase();
+    
+    const filterEl = document.getElementById('filterStatusKuis');
+    const statusFilter = filterEl ? filterEl.value : 'all';
 
     const filtered = listModulKuis.filter(item => {
         const matchKeyword = item.judulModul.toLowerCase().includes(keyword) || item.judulTarget.toLowerCase().includes(keyword);
@@ -162,7 +167,7 @@ window.mulaiKuisAi = async (tId, mId, judulModul) => {
     document.getElementById('viewLoadingKuis').classList.remove('hidden');
     document.getElementById('viewLoadingKuis').classList.add('flex');
 
-    const teksVariasi = ["Membaca rangkuman bab...", "Merumuskan 10 soal mengecoh...", "Menyiapkan pilihan ganda...", "Sebentar lagi..."];
+    const teksVariasi = ["Membaca rangkuman bab...", "Merumuskan soal ...", "Menyiapkan pilihan ganda...", "Sebentar lagi..."];
     let idx = 0; 
     loadingInterval = setInterval(() => { idx = (idx + 1) % teksVariasi.length; document.getElementById('loadingKuisText').innerText = teksVariasi[idx]; }, 2000);
 
@@ -178,7 +183,7 @@ window.mulaiKuisAi = async (tId, mId, judulModul) => {
         }
 
         const infoKonteks = konteksMateri ? ` WAJIB buat soal yang 100% mengacu pada isi materi bacaan berikut: [${konteksMateri.substring(0, 14000)}].` : "";
-        const prompt = `Kamu adalah penguji akademis profesional. Buatkan tepat 10 soal pilihan ganda yang menguji pemahaman mendalam tentang modul "${judulModul}".${infoKonteks} ATURAN: 1. Setiap soal wajib memiliki 4 opsi jawaban tanpa awalan huruf A/B/C/D. 2. Nilai pada "jawaban_benar" HARUS SAMA PERSIS (identik karakter demi karakter) dengan salah satu teks di dalam array "pilihan". 3. Kembalikan HANYA dalam format JSON Array murni: [{"soal": "Pertanyaan...", "pilihan": ["Opsi 1", "Opsi 2", "Opsi 3", "Opsi 4"], "jawaban_benar": "Opsi 1"}]`;
+        const prompt = `Kamu adalah penguji akademis profesional. Buatkan tepat 5 soal pilihan ganda yang menguji pemahaman mendalam tentang modul "${judulModul}".${infoKonteks} ATURAN: 1. Setiap soal wajib memiliki 4 opsi jawaban tanpa awalan huruf A/B/C/D. 2. Nilai pada "jawaban_benar" HARUS SAMA PERSIS (identik karakter demi karakter) dengan salah satu teks di dalam array "pilihan". 3. Kembalikan HANYA dalam format JSON Array murni: [{"soal": "Pertanyaan...", "pilihan": ["Opsi 1", "Opsi 2", "Opsi 3", "Opsi 4"], "jawaban_benar": "Opsi 1"}]`;
         
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY.trim()}`, {
             method: 'POST', 
@@ -193,7 +198,11 @@ window.mulaiKuisAi = async (tId, mId, judulModul) => {
         
         const hasilApi = await response.json(); 
         let rawText = hasilApi.candidates[0].content.parts[0].text;
-        rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        
+        const match = rawText.match(/\[[\s\S]*\]/);
+        if (match) { rawText = match[0]; }
+        else { rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim(); }
+        
         kuisSoalData = JSON.parse(rawText);
         renderSoalKeLayar();
         
@@ -278,12 +287,13 @@ window.prosesSubmitKuis = async () => {
     const skorAkhir = Math.round((benar / kuisSoalData.length) * 100);
     
     try {
-        await push(nilaiRef, {
+        await push(ref(db, `users/${auth.currentUser.uid}/riwayat_nilai`), {
             judul_modul: kuisModulAktif.judul,
             skor: skorAkhir,
             tanggal: new Date().toLocaleDateString('id-ID'),
             catatan: "",
-            detail_soal: detailJawabanUser 
+            detail_soal: detailJawabanUser,
+            saved_ai_feedback: ""
         });
         
         showToast("Kuis Selesai!", `Kamu menjawab benar ${benar} dari ${kuisSoalData.length} soal. Nilai ${skorAkhir} berhasil disimpan.`);
@@ -305,8 +315,11 @@ function renderRiwayatNilai() {
         return;
     }
 
-    const keyword = (document.getElementById('searchRiwayatNilai')?.value || '').toLowerCase();
-    const filterSkor = document.getElementById('filterSkorRiwayat')?.value || 'all';
+    const searchEl = document.getElementById('searchRiwayatNilai');
+    const keyword = (searchEl ? searchEl.value : '').toLowerCase();
+    
+    const filterEl = document.getElementById('filterSkorRiwayat');
+    const filterSkor = filterEl ? filterEl.value : 'all';
 
     const filtered = listRiwayatArray.filter(data => {
         const matchKey = (data.judul_modul || '').toLowerCase().includes(keyword) || (data.catatan || '').toLowerCase().includes(keyword) || (data.tanggal || '').toLowerCase().includes(keyword);
@@ -332,7 +345,7 @@ function renderRiwayatNilai() {
                 <td class="p-5 text-sm text-gray-500 whitespace-nowrap">${data.tanggal}</td>
                 <td class="p-5 text-sm">
                     <p class="font-bold text-gray-800">${data.judul_modul}</p>
-                    ${data.catatan ? `<div class="text-xs text-gray-500 mt-1.5 flex items-center gap-1"><span class="bg-gray-100 px-2.5 py-1 rounded-lg">📝 \${data.catatan}</span></div>` : ''}
+                    ${data.catatan ? `<div class="text-xs text-gray-500 mt-1.5 flex items-center gap-1"><span class="bg-gray-100 px-2.5 py-1 rounded-lg">📝 ${data.catatan}</span></div>` : ''}
                 </td>
                 <td class="p-5 text-center"><span class="px-3 py-1 rounded-xl text-base ${warnaSkor}">${data.skor}</span></td>
                 <td class="p-5 text-center text-sm text-gray-500">${jumlahSoal} soal</td>
@@ -408,22 +421,34 @@ window.bukaReview = async (id) => {
     
     if (daftarSalah.length > 0) {
         feedbackBox.classList.remove('hidden');
-        teksFeedback.innerHTML = `<span class="animate-pulse">Khodam sedang merumuskan masukan evaluasi belajarmu...</span>`;
         
-        try {
-            const prompt = `Sebagai mentor bernama Khodam, berikan masukan singkat (maksimal 2 paragraf pendek) untuk murid yang baru saja mengerjakan kuis materi "${data.judul_modul}". Murid ini salah menjawab beberapa pertanyaan berikut:\n\n${daftarSalah.join('\n')}\n\nBeritahu dia topik atau teori spesifik apa yang harus dia pelajari lagi berdasarkan kesalahannya tersebut. Gunakan bahasa Indonesia kasual yang memotivasi.`;
+        if (data.saved_ai_feedback && data.saved_ai_feedback.length > 0) {
+            teksFeedback.innerHTML = data.saved_ai_feedback.replace(/\n/g, '<br>');
+        } else {
+            teksFeedback.innerHTML = `<span class="animate-pulse">Khodam sedang merumuskan masukan evaluasi belajarmu...</span>`;
             
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY.trim()}`, {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ contents: [{ parts: [{text: prompt}] }] }) 
-            });
-            
-            if (!response.ok) throw new Error();
-            const hasilApi = await response.json();
-            teksFeedback.innerHTML = hasilApi.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
-        } catch(e) {
-            teksFeedback.innerText = "Gagal mengambil masukan AI saat ini. Tapi jangan menyerah, pelajari lagi materi yang masih salah di bawah ya!";
+            try {
+                const sampelSalah = daftarSalah.slice(0, 3).join('\n');
+                const prompt = `Sebagai Khodam, mentor belajar, beri evaluasi kasual 2-3 kalimat untuk murid yang salah menjawab kuis "${data.judul_modul}".\n\nSoal yang salah:\n${sampelSalah}\n\nATURAN WAJIB:\n1. Sebutkan konsep/kata kunci dari soal di atas yang perlu dipahami lagi.\n2. DILARANG KERAS menyebutkan nama bab (seperti Bab 1, Bab Z, dll) atau mengarang materi yang tidak ada di pertanyaan.\n3. Singkat, padat, dan memotivasi.`;
+                
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY.trim()}`, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts: [{text: prompt}] }] }) 
+                });
+                
+                if (!response.ok) throw new Error();
+                const hasilApi = await response.json();
+                const aiFeedbackText = hasilApi.candidates[0].content.parts[0].text;
+                
+                await update(ref(db, `users/${auth.currentUser.uid}/riwayat_nilai/${id}`), {
+                    saved_ai_feedback: aiFeedbackText
+                });
+                
+                teksFeedback.innerHTML = aiFeedbackText.replace(/\n/g, '<br>');
+            } catch(e) {
+                teksFeedback.innerText = "Gagal mengambil masukan AI saat ini. Tapi jangan menyerah, pelajari lagi materi yang masih salah di bawah ya!";
+            }
         }
     } else {
         feedbackBox.classList.remove('hidden');
